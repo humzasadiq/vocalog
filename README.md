@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/icon.png" width="200" style="background-color: white; border-radius: 50%;"/>
+  <img src="assets/icon2.png" width="100" />
 </p>
 <h1 align="center">vocalog</h1>
 
