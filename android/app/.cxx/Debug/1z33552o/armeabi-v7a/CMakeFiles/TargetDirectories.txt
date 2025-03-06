@@ -1,0 +1,2 @@
+D:/MAD/flutter/speaker_dia/android/app/.cxx/Debug/1z33552o/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/MAD/flutter/speaker_dia/android/app/.cxx/Debug/1z33552o/armeabi-v7a/CMakeFiles/rebuild_cache.dir
