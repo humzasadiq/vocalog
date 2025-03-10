@@ -4,11 +4,13 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'package:path/path.dart';
 import 'transcript_api.dart';
+import 'ai_api.dart';
 
 class RecorderController extends GetxController {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   var isRecording = false.obs;
   var transcript = "".obs;
+  final aiResponse = "".obs;
   String? filePath;
 
   @override
@@ -46,7 +48,7 @@ class RecorderController extends GetxController {
       }
 
       filePath =
-      // current date and time for each recording
+          // current date and time for each recording
           '${recordingsDir.path}/recording_${DateTime.now().day}_${DateTime.now().month}_${DateTime.now().year}_${DateTime.now().hour}_${DateTime.now().minute}.aac';
 
       await _recorder.startRecorder(
@@ -74,6 +76,7 @@ class RecorderController extends GetxController {
         String? result = await TranscriptApi.getTranscript(filePath!, fileName);
         if (result != null) {
           transcript.value = result;
+          aiResponse.value = await AIApi.getAIMinutes(result);
         }
       }
     } catch (e) {
@@ -92,6 +95,7 @@ class RecorderController extends GetxController {
       await recordingsDir.delete(recursive: true);
     }
   }
+
   @override
   void onClose() {
     _recorder.stopRecorder();

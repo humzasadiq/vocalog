@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'Widgets/scriptWidget.dart';
 import 'package:vocalog/controllers/recorder.dart';
 import 'Widgets/micWidget.dart';
+import 'Widgets/aiResponseWidget.dart';
 
 class MainScreen extends StatelessWidget {
   final RecorderController recorderController = Get.put(RecorderController());
@@ -28,6 +29,7 @@ class MainScreen extends StatelessWidget {
             SizedBox(height: 20),
             transcriptWidget(),
             SizedBox(height: 20),
+            AIResponseWidget(),
           ],
         ),
       ),

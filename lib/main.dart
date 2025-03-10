@@ -32,8 +32,8 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
-      theme: MyTheme.lightTheme(context),
-      darkTheme: MyTheme.darkTheme(context),
+      theme: MyTheme.darkTheme(context),
+      
       title: 'Weather Guy',
       builder: EasyLoading.init(),
       home: VocalogScreen(),
@@ -60,7 +60,7 @@ class _VocalogScreenState extends State<VocalogScreen> {
             currentIndex = index;
           });
         },
-        indicatorColor: Colors.blue,
+        indicatorColor: Colors.blueAccent,
         backgroundColor: Colors.black,
         selectedIndex: currentIndex,
         destinations: [
