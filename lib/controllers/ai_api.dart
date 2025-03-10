@@ -3,7 +3,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 
 class AIApi {
   static Future<String> getAIMinutes(String transcript) async {
-    String apiKey = 'AIzaSyAbOFBE3D7N9o-6xtAZWY4B-f17oLWrVoc';
+    const String apiKey = String.fromEnvironment('ai', defaultValue: 'AI_API_KEY');
     if (apiKey == null) {
       throw Exception('GEMINI_API_KEY environment variable not set');
     }

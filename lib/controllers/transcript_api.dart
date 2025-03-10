@@ -5,7 +5,7 @@ import 'ai_api.dart';
 import 'dart:io';
 
 class TranscriptApi {
-  static const String apiKey = "sk_87e12f4e0d2a761276ce70fd6463783b8ad30479492c6048";
+  static const String apiKey = String.fromEnvironment('stt', defaultValue: 'eleven_api_key');
 
   static Future<String?> getTranscript(String filePath, String fileName) async {
     try {
