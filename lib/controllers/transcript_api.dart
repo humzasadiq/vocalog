@@ -3,11 +3,12 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'dart:convert';
 import 'ai_api.dart';
 import 'dart:io';
+import 'package:path/path.dart';
 
 class TranscriptApi {
   static const String apiKey = String.fromEnvironment('stt', defaultValue: 'eleven_api_key');
 
-  static Future<String?> getTranscript(String filePath, String fileName) async {
+  static Future<String?> getTranscript(String filePath, String fileName, String dirPath) async {
     try {
       if (filePath.isEmpty) {
         print("File path is empty");
@@ -31,7 +32,15 @@ class TranscriptApi {
 
       if (response.statusCode == 200) {
         var jsonResponse = jsonDecode(responseBody);
-        return _formatTranscript(jsonResponse);
+        var formatted = _formatTranscript(jsonResponse);
+        try {
+          File("$dirPath/transcript.txt").writeAsStringSync(formatted);
+        }
+        catch (e) {
+          print("Error processing file: $e");
+          return "Error occurred";
+        }
+        return formatted;
       } else {
         print('Upload failed with status: $responseBody');
         return "Error processing file";

@@ -1,0 +1,1 @@
+D:\MAD\flutter\vocalog\build\app\intermediates\cxx\RelWithDebInfo\191u2d41\obj\arm64-v8a

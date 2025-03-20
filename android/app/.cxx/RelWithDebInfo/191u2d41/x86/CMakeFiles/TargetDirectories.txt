@@ -1,0 +1,2 @@
+D:/MAD/flutter/vocalog/android/app/.cxx/RelWithDebInfo/191u2d41/x86/CMakeFiles/edit_cache.dir
+D:/MAD/flutter/vocalog/android/app/.cxx/RelWithDebInfo/191u2d41/x86/CMakeFiles/rebuild_cache.dir

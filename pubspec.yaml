@@ -43,6 +43,11 @@ dependencies:
   flutter_sound: ^9.24.5
   rename: ^3.0.2
   google_generative_ai: ^0.4.6
+  intl: ^0.20.2
+  flutter_markdown: ^0.7.6+2
+  htmltopdfwidgets: ^1.0.9
+  
+  
   
 
 dev_dependencies:
@@ -71,6 +76,8 @@ flutter:
   assets:
     - assets/logo.png
     - assets/icon.png
+    - assets/icon2.png
+    - assets/icon3.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -83,10 +90,10 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
+  fonts:
+    - family: IBM
+      fonts:
+        - asset: assets/fonts/ibm-plex.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro
