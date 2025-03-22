@@ -6,8 +6,46 @@ import 'SettingsScreen.dart';
 import 'Widgets/MainScreenWidgets/logforDropDown.dart';
 import 'Widgets/MainScreenWidgets/speakerCheckbox.dart';
 import 'Widgets/MainScreenWidgets/topicTextField.dart';
-class MainScreen extends StatelessWidget {
+
+class MainScreen extends StatefulWidget {
+  @override
+  _MainScreenState createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen>
+    with SingleTickerProviderStateMixin {
   final RecorderController recorderController = Get.find<RecorderController>();
+
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 500),
+  );
+  late final Animation<AlignmentGeometry> _animation = Tween<AlignmentGeometry>(
+    begin: Alignment.bottomCenter,
+    end: const Alignment(0.0, 0.0),
+  ).animate(CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeInOut,
+  ));
+
+  @override
+  void initState() {
+    super.initState();
+
+    recorderController.isRecording.listen((isRecording) {
+      if (isRecording) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,12 +106,15 @@ class MainScreen extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
             ),
-            Text(
-              'G',
-              style: TextStyle(
-                fontFamily: 'IBM',
-                color: Colors.white,
-                fontSize: 22,
+            Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Text(
+                'G',
+                style: TextStyle(
+                  fontFamily: 'IBM',
+                  color: Colors.white,
+                  fontSize: 22,
+                ),
               ),
             ),
           ],
@@ -82,7 +123,6 @@ class MainScreen extends StatelessWidget {
         elevation: 2,
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 10),
@@ -106,26 +146,41 @@ class MainScreen extends StatelessWidget {
               }
             }),
           ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Column(
-              children: [
-                Obx(() {
-                  if (recorderController.isRecording.value) {
-                    return Text(
-                      recorderController.recordingTime.value,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  } else {
-                    return SizedBox.shrink();
-                  }
-                }),
-                RecordingWidget(),
-              ],
+          Expanded(
+            child: AlignTransition(
+              alignment: _animation,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Obx(() {
+                      if (recorderController.isRecording.value) {
+                        return Text(
+                          recorderController.recordingTime.value,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      } else {
+                        return SizedBox.shrink();
+                      }
+                    }),
+                    Obx(() {
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeInOut,
+                        width: recorderController.isRecording.value ? 250 : 100,
+                        height:
+                            recorderController.isRecording.value ? 250 : 100,
+                        child: RecordingWidget(),
+                      );
+                    }),
+                  ],
+                ),
+              ),
             ),
           ),
         ],

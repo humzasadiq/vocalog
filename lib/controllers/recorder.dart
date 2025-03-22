@@ -9,7 +9,7 @@ import 'dart:async';
 
 class RecorderController extends GetxController {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
-  var isRecording = false.obs;
+  RxBool isRecording = false.obs;
   var transcript = "".obs;
   final aiResponse = "".obs;
   String? filePath;
