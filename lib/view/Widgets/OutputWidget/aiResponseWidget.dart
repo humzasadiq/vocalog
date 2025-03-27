@@ -19,7 +19,8 @@ class AIResponseWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: directoryExists && outputExists
-          ? Expanded(
+          ? SizedBox(
+              width: double.infinity,
               child: Markdown(
                 data: outputFile.readAsStringSync(),
                 styleSheet: MarkdownStyleSheet(

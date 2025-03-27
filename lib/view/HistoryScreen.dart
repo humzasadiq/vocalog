@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:get/get.dart';
+import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:vocalog/view/OutputScreen.dart';
 
 class HistoryScreen extends StatelessWidget {
@@ -12,25 +13,14 @@ class HistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     var path = "/storage/emulated/0/VocalogRecordings";
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Color(0xFF101010),
-        title: Container(
-          child: Row(
-            children: [
-              Icon(
-                Icons.history,
-                color: Colors.white,
-                size: 30,
-              ),
-              SizedBox(width: 10),
-              Text(
-                "History",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ],
+        backgroundColor: Color(0xFF080808),
+        centerTitle: true,
+        title: 
+          Text(
+            "[History]",
+            style: TextStyle(color: Colors.white, fontSize: 18),
           ),
-        ),
       ),
       body: Scrollbar(
         child: FutureBuilder<List<File>>(
@@ -80,7 +70,6 @@ class HistoryScreen extends StatelessWidget {
 
   Future<List<File>> getRecordingFiles(String path) async {
     try {
-      // Get all subdirectories matching the naming pattern
       final directory = Directory(path);
       if (!await directory.exists()) return [];
 
@@ -92,7 +81,6 @@ class HistoryScreen extends StatelessWidget {
         return false;
       }).cast<Directory>();
 
-      // Collect all `recording.aac` files from the subdirectories
       List<File> recordingFiles = [];
       for (var subdir in subdirectories) {
         final file = File('${subdir.path}/recording.aac');

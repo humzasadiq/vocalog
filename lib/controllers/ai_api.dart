@@ -4,7 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AIApi {
   static Future<String> getAIMinutes(String transcript, String dirPath) async {
-    final String? apiKey = dotenv.env['ai'];
+    final String apiKey = dotenv.get('ai', fallback: '');
     if (apiKey == null) {
       throw Exception('GEMINI_API_KEY environment variable not set');
     }

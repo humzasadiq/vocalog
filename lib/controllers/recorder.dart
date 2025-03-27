@@ -16,7 +16,7 @@ class RecorderController extends GetxController {
   String? filePath;
   String? fileDir;
 
-  // Amplitude and animation related properties
+  // mplitude and animation related properties
   var volume = 0.0.obs;
   StateMachineController? _riveController;
   SMIInput<bool>? upTrigger;
@@ -58,7 +58,6 @@ class RecorderController extends GetxController {
     if (_riveController != null) {
       artboard.addController(_riveController!);
 
-      // Find the 'Up' input
       upTrigger = _riveController?.findInput('Up');
 
       if (upTrigger == null) {
@@ -82,17 +81,12 @@ class RecorderController extends GetxController {
     if (!isRecording.value) return;
 
     try {
-      // Get current recording stream
       _recorder.onProgress?.listen((event) {
-        // Normalize amplitude 
         double normalizedVolume = (event.decibels ?? 0) / 100;
-        
         volume.value = normalizedVolume;
 
-        // Trigger animation if volume exceeds threshold
         if (normalizedVolume > 0.5 && upTrigger != null) {
-          upTrigger?.value = true;
-          
+          upTrigger?.value = true;  
           // Reset trigger
           Future.delayed(const Duration(milliseconds: 500), () {
             upTrigger?.value = false;

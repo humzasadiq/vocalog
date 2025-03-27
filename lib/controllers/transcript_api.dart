@@ -7,7 +7,7 @@ import 'package:path/path.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class TranscriptApi {
-  static String apiKey = "${dotenv.env['stt']!}";
+  static final String apiKey = dotenv.get('stt', fallback: '');
 
   static Future<String?> getTranscript(String filePath, String fileName, String dirPath) async {
     try {

@@ -39,7 +39,10 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
-      theme: ThemeData(fontFamily: 'IBM', scaffoldBackgroundColor: Colors.black, colorScheme: ColorScheme.dark(primary: Colors.grey.shade600)),
+      theme: ThemeData(
+          fontFamily: 'IBM',
+          scaffoldBackgroundColor: Colors.black,
+          colorScheme: ColorScheme.dark(primary: Colors.grey.shade600)),
       title: 'vocalog',
       builder: EasyLoading.init(),
       home: VocalogScreen(),
@@ -60,37 +63,47 @@ class _VocalogScreenState extends State<VocalogScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: NavigationBarTheme(
-        data: NavigationBarThemeData(
-          backgroundColor: Colors.black,
-          indicatorColor: Colors.white,
-          labelTextStyle: MaterialStateProperty.all(
-            TextStyle(color: Colors.white),
+      bottomNavigationBar: GetX<RecorderController>(
+        builder: (controller) => NavigationBarTheme(
+          data: NavigationBarThemeData(
+            backgroundColor: Colors.black,
+            indicatorColor: Colors.white,
+            labelTextStyle: MaterialStateProperty.all(
+              TextStyle(
+                color:
+                    controller.isRecording.value ? Colors.grey : Colors.white,
+              ),
+            ),
+            iconTheme: MaterialStateProperty.resolveWith((states) {
+              if (states.contains(MaterialState.selected)) {
+                return IconThemeData(color: Colors.black);
+              }
+              return IconThemeData(
+                color:
+                    controller.isRecording.value ? Colors.grey : Colors.white,
+              );
+            }),
           ),
-          iconTheme: MaterialStateProperty.resolveWith((states) {
-            if (states.contains(MaterialState.selected)) {
-              return IconThemeData(color: Colors.black);
-            }
-            return IconThemeData(color: Colors.white);
-          }),
-        ),
-        child: NavigationBar(
-          onDestinationSelected: (int index) {
-            setState(() {
-              currentIndex = index;
-            });
-          },
-          selectedIndex: currentIndex,
-          destinations: [
-            NavigationDestination(
-              icon: Icon(Icons.mic),
-              label: 'Record',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.history),
-              label: 'History',
-            ),
-          ],
+          child: NavigationBar(
+            onDestinationSelected: (int index) {
+              if (!controller.isRecording.value) {
+                setState(() {
+                  currentIndex = index;
+                });
+              }
+            },
+            selectedIndex: currentIndex,
+            destinations: [
+              NavigationDestination(
+                icon: Icon(Icons.mic),
+                label: 'Record',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.history),
+                label: 'History',
+              ),
+            ],
+          ),
         ),
       ),
       body: <Widget>[

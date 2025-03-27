@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:vocalog/controllers/recorder.dart';
 import 'package:vocalog/view/Widgets/OutputWidget/aiResponseWidget.dart';
 import 'package:vocalog/view/Widgets/OutputWidget/audioPlayer.dart';
 import 'package:intl/intl.dart';
@@ -100,9 +99,9 @@ class _OutputscreenState extends State<Outputscreen> {
   Widget _getContentForIndex(int index, String dirPath) {
     switch (index) {
       case 0:
-        return Audioplayer(filePath: widget.filePath); // Audio Player
+        return Audioplayer(filePath: widget.filePath); // Audio player
       case 1:
-        return transcriptWidget(filePath: dirPath); // Transcript Widget
+        return transcriptWidget(filePath: dirPath); // transcript Widget
       case 2:
         return AIResponseWidget(filePath: dirPath); // AI Response Widget
       default:
