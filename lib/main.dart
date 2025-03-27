@@ -5,8 +5,15 @@ import 'package:vocalog/view/HistoryScreen.dart';
 import 'package:vocalog/view/MainScreen.dart';
 import 'utils/Themes.dart';
 import 'controllers/recorder.dart';
-void main() {
-  // Initialize RecorderController before running the app
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    print("Failed to load .env file: $e");
+  }
   Get.lazyPut(() => RecorderController());
   runApp(MyApp());
   configLoading();
@@ -24,14 +31,15 @@ void configLoading() {
 
 class MyApp extends StatelessWidget {
   MyApp({super.key});
-  late final RecorderController recorderController = Get.find<RecorderController>();
+  late final RecorderController recorderController =
+      Get.find<RecorderController>();
 
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.system,
-      theme: ThemeData(fontFamily: 'IBM'),
+      themeMode: ThemeMode.dark,
+      theme: ThemeData(fontFamily: 'IBM', scaffoldBackgroundColor: Colors.black, colorScheme: ColorScheme.dark(primary: Colors.grey.shade600)),
       title: 'vocalog',
       builder: EasyLoading.init(),
       home: VocalogScreen(),
@@ -54,7 +62,7 @@ class _VocalogScreenState extends State<VocalogScreen> {
     return Scaffold(
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
-          backgroundColor: Color(0xFF101010),
+          backgroundColor: Colors.black,
           indicatorColor: Colors.white,
           labelTextStyle: MaterialStateProperty.all(
             TextStyle(color: Colors.white),

@@ -15,7 +15,7 @@ class RecordingWidget extends StatelessWidget {
           controller.isRecording.value
               ? 'assets/icon3.png'
               : 'assets/icon2.png',
-          width: double.infinity,
+          width: 200,
         ),
         // icon: Icon(controller.isRecording.value ? Icons.stop : Icons.mic),
 

@@ -20,20 +20,20 @@ class _AudioplayerState extends State<Audioplayer> {
   @override
   void initState() {
     super.initState();
+    
     _player.openPlayer().then((_) {
-      setState(() {});
-    });
-
-    // Set subscription duration for progress updates
-    _player.setSubscriptionDuration(const Duration(milliseconds: 100));
-
-    // Listen to playback progress
-    _playerSubscription = _player.onProgress!.listen((event) {
       setState(() {
-        _currentPosition = event.position;
-        _totalDuration = event.duration;
+        if (_player.onProgress != null) {
+          _playerSubscription = _player.onProgress!.listen((event) {
+            setState(() {
+              _currentPosition = event.position;
+              _totalDuration = event.duration;
+            });
+          });
+        }
       });
     });
+    _player.setSubscriptionDuration(const Duration(milliseconds: 100));
   }
 
   @override

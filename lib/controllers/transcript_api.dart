@@ -4,9 +4,10 @@ import 'dart:convert';
 import 'ai_api.dart';
 import 'dart:io';
 import 'package:path/path.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class TranscriptApi {
-  static const String apiKey = String.fromEnvironment('stt', defaultValue: 'eleven_api_key');
+  static String apiKey = "${dotenv.env['stt']!}";
 
   static Future<String?> getTranscript(String filePath, String fileName, String dirPath) async {
     try {

@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AIApi {
   static Future<String> getAIMinutes(String transcript, String dirPath) async {
-    const String apiKey = String.fromEnvironment('ai', defaultValue: 'AI_API_KEY');
+    final String? apiKey = dotenv.env['ai'];
     if (apiKey == null) {
       throw Exception('GEMINI_API_KEY environment variable not set');
     }

@@ -37,7 +37,6 @@ dependencies:
   get: ^4.7.2
   flutter_easyloading: ^3.0.5
   google_fonts: ^6.2.1
-  record: ^5.2.1
   path_provider: ^2.1.5
   permission_handler: ^11.4.0
   flutter_sound: ^9.24.5
@@ -46,6 +45,8 @@ dependencies:
   intl: ^0.20.2
   flutter_markdown: ^0.7.6+2
   htmltopdfwidgets: ^1.0.9
+  rive: ^0.13.20
+  flutter_dotenv: ^5.2.1
   
   
   
@@ -78,7 +79,8 @@ flutter:
     - assets/icon.png
     - assets/icon2.png
     - assets/icon3.png
-
+    - assets/rive/vocalog.riv
+    - .env
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

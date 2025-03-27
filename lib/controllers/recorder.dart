@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:rive/rive.dart';
 import 'dart:io';
 import 'package:path/path.dart';
 import 'transcript_api.dart';
@@ -9,15 +10,22 @@ import 'dart:async';
 
 class RecorderController extends GetxController {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
-  RxBool isRecording = false.obs;
+  var isRecording = false.obs;
   var transcript = "".obs;
   final aiResponse = "".obs;
   String? filePath;
   String? fileDir;
 
+  // Amplitude and animation related properties
+  var volume = 0.0.obs;
+  StateMachineController? _riveController;
+  SMIInput<bool>? upTrigger;
+
   var recordingTime = "00:00:00".obs;
   Timer? _timer;
+  Timer? _amplitudeTimer;
   int _elapsedSeconds = 0;
+
   @override
   void onInit() {
     super.onInit();
@@ -44,6 +52,58 @@ class RecorderController extends GetxController {
     }
   }
 
+  void initRiveController(Artboard artboard) {
+    _riveController = StateMachineController.fromArtboard(artboard, 'State Machine');
+
+    if (_riveController != null) {
+      artboard.addController(_riveController!);
+
+      // Find the 'Up' input
+      upTrigger = _riveController?.findInput('Up');
+
+      if (upTrigger == null) {
+        print('Could not find "Up" input');
+      } else {
+        print('"Up" input found and ready');
+      }
+    } else {
+      print('State Machine not initialized');
+    }
+  }
+
+  void _startAmplitudeMonitoring() {
+    _amplitudeTimer = Timer.periodic(
+      const Duration(milliseconds: 100), 
+      (_) => _updateAmplitude()
+    );
+  }
+
+  Future<void> _updateAmplitude() async {
+    if (!isRecording.value) return;
+
+    try {
+      // Get current recording stream
+      _recorder.onProgress?.listen((event) {
+        // Normalize amplitude 
+        double normalizedVolume = (event.decibels ?? 0) / 100;
+        
+        volume.value = normalizedVolume;
+
+        // Trigger animation if volume exceeds threshold
+        if (normalizedVolume > 0.5 && upTrigger != null) {
+          upTrigger?.value = true;
+          
+          // Reset trigger
+          Future.delayed(const Duration(milliseconds: 500), () {
+            upTrigger?.value = false;
+          });
+        }
+      });
+    } catch (e) {
+      print('Amplitude reading error: $e');
+    }
+  }
+
   Future<void> startRecording() async {
     fileDir =
         '/storage/emulated/0/VocalogRecordings/recording_${DateTime.now().day}_${DateTime.now().month}_${DateTime.now().year}_${DateTime.now().hour}_${DateTime.now().minute}/';
@@ -57,7 +117,6 @@ class RecorderController extends GetxController {
       }
 
       filePath =
-          // current date and time for each recording
           '${recordingsDir.path}/recording.aac';
 
       await _recorder.startRecorder(
@@ -67,6 +126,7 @@ class RecorderController extends GetxController {
 
       isRecording.value = true;
       _startTimer();
+      _startAmplitudeMonitoring();
       print("Recording started at: $filePath");
     } catch (e) {
       print("Error starting recorder: $e");
@@ -78,6 +138,8 @@ class RecorderController extends GetxController {
       await _recorder.stopRecorder();
       isRecording.value = false;
       _stopTimer();
+      _amplitudeTimer?.cancel();
+      volume.value = 0.0;
       print("Recording saved: $filePath");
 
       if (filePath != null) {
@@ -119,7 +181,7 @@ class RecorderController extends GetxController {
     _timer?.cancel();
     _timer = null;
     _elapsedSeconds = 0;
-    recordingTime.value = "00:00:00"; // Reset the time
+    recordingTime.value = "00:00:00";
   }
 
   String _formatDuration(int seconds) {
@@ -134,6 +196,8 @@ class RecorderController extends GetxController {
     _recorder.stopRecorder();
     _recorder.closeRecorder();
     _stopTimer();
+    _amplitudeTimer?.cancel();
+    _riveController?.dispose();
     super.onClose();
   }
 }
