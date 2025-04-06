@@ -7,14 +7,27 @@ import 'package:path/path.dart';
 import 'transcript_api.dart';
 import 'ai_api.dart';
 import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 class RecorderController extends GetxController {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
+  final FlutterSoundPlayer _player = FlutterSoundPlayer();
   var isRecording = false.obs;
   var transcript = "".obs;
   final aiResponse = "".obs;
   String? filePath;
   String? fileDir;
+  // var soundType = true.obs;
+  // String get soundTypeString => (soundType.value ? "1" : "2");
+
+  // Sound paths
+  late String startupSoundPath;
+  late String stopSoundPath;
+  bool _isSoundInitialized = false;
 
   // mplitude and animation related properties
   var volume = 0.0.obs;
@@ -27,9 +40,38 @@ class RecorderController extends GetxController {
   int _elapsedSeconds = 0;
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
-    _initializeRecorder();
+    await _initializeSoundEffects();
+    await _initializeRecorder();
+  }
+
+  Future<void> reinitializeSoundEffects() async {
+    _isSoundInitialized = false;
+    await _initializeSoundEffects();
+  }
+
+  Future<void> _initializeSoundEffects() async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      startupSoundPath = '${tempDir.path}/startup1.wav';
+      stopSoundPath = '${tempDir.path}/stop1.wav';
+
+      // Copy sound files from assets to temp directory
+      ByteData startupData =
+          await rootBundle.load('assets/sounds/startup1.wav');
+      ByteData stopData =
+          await rootBundle.load('assets/sounds/stop1.wav');
+
+      await File(startupSoundPath)
+          .writeAsBytes(startupData.buffer.asUint8List());
+      await File(stopSoundPath).writeAsBytes(stopData.buffer.asUint8List());
+
+      _isSoundInitialized = true;
+    } catch (e) {
+      print("Error initializing sound effects: $e");
+      _isSoundInitialized = false;
+    }
   }
 
   Future<void> _initializeRecorder() async {
@@ -46,14 +88,19 @@ class RecorderController extends GetxController {
       }
 
       await _recorder.openRecorder();
+      await _player.openPlayer();
       await _recorder.setSubscriptionDuration(const Duration(milliseconds: 10));
+
+      // Pre-load sound effects
+      // _isSoundInitialized = await _initializeSoundEffects();
     } catch (e) {
       print("Error initializing recorder: $e");
     }
   }
 
   void initRiveController(Artboard artboard) {
-    _riveController = StateMachineController.fromArtboard(artboard, 'State Machine');
+    _riveController =
+        StateMachineController.fromArtboard(artboard, 'State Machine');
 
     if (_riveController != null) {
       artboard.addController(_riveController!);
@@ -72,9 +119,7 @@ class RecorderController extends GetxController {
 
   void _startAmplitudeMonitoring() {
     _amplitudeTimer = Timer.periodic(
-      const Duration(milliseconds: 100), 
-      (_) => _updateAmplitude()
-    );
+        const Duration(milliseconds: 100), (_) => _updateAmplitude());
   }
 
   Future<void> _updateAmplitude() async {
@@ -86,7 +131,7 @@ class RecorderController extends GetxController {
         volume.value = normalizedVolume;
 
         if (normalizedVolume > 0.5 && upTrigger != null) {
-          upTrigger?.value = true;  
+          upTrigger?.value = true;
           // Reset trigger
           Future.delayed(const Duration(milliseconds: 500), () {
             upTrigger?.value = false;
@@ -95,6 +140,38 @@ class RecorderController extends GetxController {
       });
     } catch (e) {
       print('Amplitude reading error: $e');
+    }
+  }
+
+  Future<void> playStartupSound() async {
+    if (!_isSoundInitialized) return;
+    try {
+      await _player.openPlayer();
+      await _player.startPlayer(
+        fromURI: startupSoundPath,
+        whenFinished: () async {
+          await _player.stopPlayer();
+          await _player.closePlayer();
+        },
+      );
+    } catch (e) {
+      print("Error playing startup sound: $e");
+    }
+  }
+
+  Future<void> playStopSound() async {
+    if (!_isSoundInitialized) return;
+    try {
+      await _player.openPlayer();
+      await _player.startPlayer(
+        fromURI: stopSoundPath,
+        whenFinished: () async {
+          await _player.stopPlayer();
+          await _player.closePlayer();
+        },
+      );
+    } catch (e) {
+      print("Error playing stop sound: $e");
     }
   }
 
@@ -110,8 +187,7 @@ class RecorderController extends GetxController {
         await recordingsDir.create(recursive: true);
       }
 
-      filePath =
-          '${recordingsDir.path}/recording.aac';
+      filePath = '${recordingsDir.path}/recording.aac';
 
       await _recorder.startRecorder(
         toFile: filePath,
@@ -119,6 +195,8 @@ class RecorderController extends GetxController {
       );
 
       isRecording.value = true;
+      playStartupSound();
+
       _startTimer();
       _startAmplitudeMonitoring();
       print("Recording started at: $filePath");
@@ -131,23 +209,71 @@ class RecorderController extends GetxController {
     try {
       await _recorder.stopRecorder();
       isRecording.value = false;
+      playStopSound();
       _stopTimer();
       _amplitudeTimer?.cancel();
       volume.value = 0.0;
-      print("Recording saved: $filePath");
 
-      if (filePath != null) {
-        String fileName = basename(filePath!);
-        print("File name: $fileName");
+      bool? shouldSave = await Get.dialog<bool>(
+        AlertDialog(
+          title: Text('Save Recording'),
+          content: Text('Do you want to save this recording?'),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(result: false),
+              child: Text('No'),
+              style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.redAccent),
+            ),
+            TextButton(
+              onPressed: () => Get.back(result: true),
+              child: Text('Save'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.green,
+                textStyle: TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ),
+          ],
+        ),
+        barrierDismissible: false,
+      );
 
-        String? result = await TranscriptApi.getTranscript(filePath!, fileName, fileDir!);
-        if (result != null) {
-          transcript.value = result;
-          aiResponse.value = await AIApi.getAIMinutes(result, fileDir!);
+      if (shouldSave == true) {
+        print("Recording saved: $filePath");
+        if (filePath != null) {
+          String fileName = basename(filePath!);
+          print("File name: $fileName");
+
+          String? result =
+              await TranscriptApi.getTranscript(filePath!, fileName, fileDir!);
+          if (result != null) {
+            transcript.value = result;
+            aiResponse.value = await AIApi.getAIMinutes(result, fileDir!);
+          }
         }
+      } else {
+        // Delete the recording if user cancels
+        if (filePath != null && File(filePath!).existsSync()) {
+          await File(filePath!).delete();
+          print("Recording deleted: $filePath");
+        }
+        if (fileDir != null && Directory(fileDir!).existsSync()) {
+          await Directory(fileDir!).delete(recursive: true);
+          print("Directory deleted: $fileDir");
+        }
+        transcript.value = "";
+        aiResponse.value = "";
       }
     } catch (e) {
       print("Error stopping recorder: $e");
+      Get.snackbar(
+        'Error',
+        'Failed to process recording',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
     }
   }
 
@@ -187,7 +313,7 @@ class RecorderController extends GetxController {
 
   @override
   void onClose() {
-    _recorder.stopRecorder();
+    _player.closePlayer();
     _recorder.closeRecorder();
     _stopTimer();
     _amplitudeTimer?.cancel();

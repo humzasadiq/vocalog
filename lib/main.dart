@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:vocalog/view/HistoryScreen.dart';
-import 'package:vocalog/view/MainScreen.dart';
+import 'package:vocalog/view/pages/HistoryScreen.dart';
+import 'package:vocalog/view/pages/MainScreen.dart';
 import 'utils/Themes.dart';
 import 'controllers/recorder.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';

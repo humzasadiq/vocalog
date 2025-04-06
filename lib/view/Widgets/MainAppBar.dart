@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:vocalog/view/SettingsScreen.dart';
+import 'package:vocalog/view/pages/SettingsScreen.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override

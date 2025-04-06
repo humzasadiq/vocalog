@@ -3,24 +3,28 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:get/get.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
-import 'package:vocalog/view/OutputScreen.dart';
+import 'package:vocalog/view/pages/OutputScreen.dart';
+import 'package:just_audio/just_audio.dart';
 
 class HistoryScreen extends StatelessWidget {
-  const HistoryScreen({super.key});
+  HistoryScreen({super.key});
+  final player = AudioPlayer();
 
   @override
   Widget build(BuildContext context) {
     var path = "/storage/emulated/0/VocalogRecordings";
     return Scaffold(
+      // backgroundColor: Colors.black,
+      backgroundColor: Color(0xFF101010),
       appBar: AppBar(
-        backgroundColor: Color(0xFF080808),
+        backgroundColor: Color(0xFF101010),
+        // backgroundColor: Color(0xFF7550F1),
         centerTitle: true,
-        title: 
-          Text(
-            "[History]",
-            style: TextStyle(color: Colors.white, fontSize: 18),
-          ),
+        title: Text(
+          "[History]",
+          style: TextStyle(color: Colors.white, fontSize: 18),
+          // style: TextStyle(color: Colors.black, fontSize: 18),
+        ),
       ),
       body: Scrollbar(
         child: FutureBuilder<List<File>>(
@@ -31,17 +35,37 @@ class HistoryScreen extends StatelessWidget {
             } else if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text(style: TextStyle(color: Colors.white70), 'No recordings found'));
+              return Center(
+                  child: Text(
+                      style: TextStyle(color: Colors.white70),
+                      'No recordings found'));
             } else {
               return ListView.builder(
                 itemCount: snapshot.data!.length,
                 itemBuilder: (context, index) {
+                  final Color calar =
+                      Color((math.Random().nextDouble() * 0xFFFFFF).toInt())
+                          .withOpacity(1.0);
                   return TextButton(
                     style: ButtonStyle(
                       foregroundColor: MaterialStateProperty.all(Colors.white),
+                      overlayColor: MaterialStateProperty.all(
+                          Colors.grey.shade900.withOpacity(0.5)),
                     ),
-                    onPressed: () {
-                      Get.to(Outputscreen(filePath: snapshot.data![index].path, index: index, fileStat: FileStat.statSync(snapshot.data![index].path).modified.toString()));
+                    onPressed: () async {
+                      Get.to(Outputscreen(
+                        calar: calar,
+                        filePath: snapshot.data![index].path,
+                        index: index,
+                        fileStat: FileStat.statSync(snapshot.data![index].path)
+                            .modified
+                            .toString(),
+                        fileDuration:
+                            (await player.setUrl(snapshot.data![index].path))
+                              ?.toString()
+                              .split('.')
+                              .first ?? 'Unknown',
+                      ));
                     },
                     child: ListTile(
                       title: Text(
@@ -55,7 +79,7 @@ class HistoryScreen extends StatelessWidget {
                       ),
                       leading: Icon(
                         Icons.record_voice_over,
-                        color: Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
+                        color: calar,
                       ),
                     ),
                   );

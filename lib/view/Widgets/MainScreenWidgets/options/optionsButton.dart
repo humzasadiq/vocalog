@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vocalog/controllers/recorder.dart';
 
-import 'package:vocalog/view/Widgets/MainScreenWidgets/logforDropDown.dart';
-import 'package:vocalog/view/Widgets/MainScreenWidgets/speakerCheckbox.dart';
-import 'package:vocalog/view/Widgets/MainScreenWidgets/topicTextField.dart';
+import 'package:vocalog/view/Widgets/MainScreenWidgets/options/logforDropDown.dart';
+import 'package:vocalog/view/Widgets/MainScreenWidgets/options/speakerCheckbox.dart';
+import 'package:vocalog/view/Widgets/MainScreenWidgets/options/topicTextField.dart';
 
 class OptionsButton extends StatefulWidget {
   const OptionsButton({super.key});
@@ -104,36 +104,39 @@ class _OptionsButtonState extends State<OptionsButton> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 100,
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          padding: EdgeInsets.zero,
-          minimumSize: const Size(50, 30),
-          alignment: Alignment.centerLeft,
-          side: BorderSide(width: 1.0, color: Colors.grey.shade600),
-        ),
-        onPressed: () {
-            _toggleOptions(context);
-        },
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Obx(() => Icon(
-                color: !recorderController.isRecording.value
-                    ? Colors.grey
-                    : Colors.grey.shade300,
-                Icons.add)),
-            Obx(() => Text(
-                  'options',
-                  style: TextStyle(
-                    color: !recorderController.isRecording.value
-                        ? Colors.grey
-                        : Colors.grey.shade300,
-                    fontWeight: FontWeight.bold,
-                  ),
-                )),
-          ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 10.0),
+      child: SizedBox(
+        width: 100,
+        child: OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(50, 30),
+            alignment: Alignment.centerLeft,
+            side: BorderSide(width: 1.0, color: Colors.grey.shade600),
+          ),
+          onPressed: () {
+              _toggleOptions(context);
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Obx(() => Icon(
+                  color: !recorderController.isRecording.value
+                      ? Colors.grey
+                      : Colors.grey.shade300,
+                  Icons.add)),
+              Obx(() => Text(
+                    'options',
+                    style: TextStyle(
+                      color: !recorderController.isRecording.value
+                          ? Colors.grey
+                          : Colors.grey.shade300,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )),
+            ],
+          ),
         ),
       ),
     );

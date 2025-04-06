@@ -6,29 +6,34 @@ import 'package:vocalog/controllers/recorder.dart';
 class SettingsScreen extends StatelessWidget {
   // const SettingsScreen({super.key});
   final RecorderController recorderController = Get.find<RecorderController>();
+
+  final WidgetStateProperty<Color?> overlayColor = WidgetStateProperty<Color?>.fromMap(
+      <WidgetState, Color>{
+        WidgetState.selected: const Color.fromARGB(255, 163, 115, 240),
+        WidgetState.disabled: const Color.fromARGB(255, 254, 181, 108),
+      },
+    );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Color(0xFF101010),
-        // toolbarHeight: 50,
+        backgroundColor: Color(0xFF080808),
         title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
                 onPressed: () => Get.back(),
-                icon: const Icon(Icons.arrow_back),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded),
                 color: Colors.white,
               ),
-              SizedBox(width: 10),
-              Icon(
-                Icons.settings,
-                color: Colors.white,
-                size: 30,
+              Text(
+                "[Settings]",
+                style: TextStyle(color: Colors.white, fontSize: 18),
               ),
-              SizedBox(width: 10),
-              Text(style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), "Settings"),
+              SizedBox(width: 20),
             ],
         ),
       ),
@@ -36,7 +41,7 @@ class SettingsScreen extends StatelessWidget {
         child: ListView(
           children: [
             ListTile(
-              textColor: Colors.white,
+              textColor: Colors.grey,
               title: Text("Gemini API Key"),
               subtitle: Text("Enter your AI API Key"),
               trailing: IconButton(
@@ -49,7 +54,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             Divider(),
             ListTile(
-              textColor: Colors.white,
+              textColor: Colors.grey,
               title: Text("ElevenLabs API Key"),
               subtitle: Text("Enter your STT API Key"),
               trailing: IconButton(
@@ -62,7 +67,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             Divider(),
             ListTile(
-              textColor: Colors.white,
+              textColor: Colors.grey,
               title: Text("Delete all recordings"),
               trailing: IconButton(
                 onPressed: () => recorderController.deleteAllRecordings(), 
@@ -72,6 +77,21 @@ class SettingsScreen extends StatelessWidget {
                 )),
             ),
             Divider(),
+            // ListTile(
+            //   textColor: Colors.grey,
+            //   title: Text("Sound Effects"),
+            //   subtitle: Obx(() => Text(recorderController.soundType.value ? "TipTop" : "Whimsical")),
+            //   trailing: Obx(() => Switch(
+            //     overlayColor: overlayColor,
+            //     trackColor: overlayColor,
+            //     value: recorderController.soundType.value,
+            //     onChanged: (value) {
+            //       recorderController.soundType.value = value;
+            //       recorderController.playStartupSound();
+            //       recorderController.reinitializeSoundEffects();
+            //     },
+            //   )),
+            // ),
           ],
       ),
       ),

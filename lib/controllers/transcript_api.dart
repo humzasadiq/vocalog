@@ -1,9 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'dart:convert';
-import 'ai_api.dart';
 import 'dart:io';
-import 'package:path/path.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class TranscriptApi {
