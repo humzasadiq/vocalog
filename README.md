@@ -5,6 +5,8 @@
 
 <p align="center">AI powered tool to record and create meeting minutes and more.</p>
 
+<a>https://vocalog.vercel.app</a>
+
 <hr>
   
 
