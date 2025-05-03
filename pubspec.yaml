@@ -52,6 +52,14 @@ dependencies:
   markdown: ^7.3.0
   printing: ^5.14.2
   just_audio: ^0.9.46
+  shared_preferences: ^2.5.3
+  cloud_firestore: ^5.6.7
+  firebase_storage: ^12.4.5
+  firebase_auth: ^5.5.3
+  velocity_x: ^4.3.1
+  iconsax: ^0.0.8
+  firebase_core: ^3.13.0
+  flutter_swipe_action_cell: ^3.1.5
   
   
   

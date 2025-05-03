@@ -1,18 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vocalog/controllers/RecordingController.dart';
+import 'package:vocalog/controllers/UserController.dart';
 import 'package:vocalog/controllers/recorder.dart';
+import 'package:vocalog/utils/Themes.dart';
+import 'package:vocalog/view/Auth/ForgotPassScreen.dart';
+import 'package:vocalog/view/Auth/SignInScreen.dart';
+import 'package:vocalog/view/pages/Profilescreen.dart';
 
+import '../Widgets/DialogLogoutWidget.dart';
 
 class SettingsScreen extends StatelessWidget {
   // const SettingsScreen({super.key});
-  final RecorderController recorderController = Get.find<RecorderController>();
-
-  final WidgetStateProperty<Color?> overlayColor = WidgetStateProperty<Color?>.fromMap(
-      <WidgetState, Color>{
-        WidgetState.selected: const Color.fromARGB(255, 163, 115, 240),
-        WidgetState.disabled: const Color.fromARGB(255, 254, 181, 108),
-      },
-    );
+  final RecorderController recorderController = Get.put(RecorderController());
+  final UserController userController = Get.find<UserController>();
+  final RecordingController recordingController =
+      Get.put(RecordingController());
+  final WidgetStateProperty<Color?> overlayColor =
+      WidgetStateProperty<Color?>.fromMap(
+    <WidgetState, Color>{
+      WidgetState.selected: const Color.fromARGB(255, 163, 115, 240),
+      WidgetState.disabled: const Color.fromARGB(255, 254, 181, 108),
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -21,62 +31,124 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Color(0xFF080808),
-        title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                onPressed: () => Get.back(),
-                icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                color: Colors.white,
-              ),
-              Text(
-                "[Settings]",
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-              SizedBox(width: 20),
-            ],
+        centerTitle: true,
+        title: Text(
+          "[Settings]",
+          style: TextStyle(color: Colors.white, fontSize: 18),
         ),
       ),
       body: Center(
         child: ListView(
           children: [
             ListTile(
+              onTap: () => Get.to(() => ProfileScreen()),
               textColor: Colors.grey,
-              title: Text("Gemini API Key"),
-              subtitle: Text("Enter your AI API Key"),
-              trailing: IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.edit,
-                  color: Colors.blue,
-                  ),
+              leading: Icon(
+                Icons.person,
+                color: AppConstant.primary,
               ),
+              title: Text("Update Profile"),
+              subtitle: Text("Change your display name"),
             ),
-            Divider(),
+            Divider(
+              thickness: 1,
+              color: Colors.white.withOpacity(0.2),
+            ),
             ListTile(
+              onTap: () => Get.to(() => ForgotPassScreen()),
               textColor: Colors.grey,
-              title: Text("ElevenLabs API Key"),
-              subtitle: Text("Enter your STT API Key"),
-              trailing: IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.edit,
-                  color: Colors.blue,
-                  ),
+              title: Text("Forgot Password"),
+              leading: Icon(
+                Icons.lock,
+                color: AppConstant.primary,
               ),
+              subtitle: Text("Change your password"),
             ),
-            Divider(),
+            // Divider(
+            //   thickness: 1,
+            //   color: Colors.white.withOpacity(0.2),
+            // ),
+            // ListTile(
+            //   textColor: Colors.grey,
+            //   title: Text("Gemini API Key"),
+            //   subtitle: Text("Enter your AI API Key"),
+            //   trailing: IconButton(
+            //     onPressed: () {},
+            //     icon: const Icon(
+            //       Icons.edit,
+            //       color: Colors.blue,
+            //     ),
+            //   ),
+            // ),
+            // Divider(
+            //   thickness: 1,
+            //   color: Colors.white.withOpacity(0.2),
+            // ),
+            // ListTile(
+            //   textColor: Colors.grey,
+            //   title: Text("ElevenLabs API Key"),
+            //   subtitle: Text("Enter your STT API Key"),
+            //   trailing: IconButton(
+            //     onPressed: () {},
+            //     icon: const Icon(
+            //       Icons.edit,
+            //       color: Colors.blue,
+            //     ),
+            //   ),
+            // ),
+            Divider(
+              thickness: 1,
+              color: Colors.white.withOpacity(0.2),
+            ),
+            // Divider(
+            // thickness: 1,
+            // color: Colors.white.withOpacity(0.2),,),
             ListTile(
+              onTap: () async {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return CustomDialog(
+                          title: "Logout",
+                          content: "Are you sure ?",
+                          onCancel: () {
+                            Navigator.of(context).pop();
+                          },
+                          onConfirm: () async {
+                            Get.offAll(() => LogInScreen());
+
+                            await userController.logout();
+                          });
+                    });
+              },
+              textColor: Colors.grey,
+              title: Text("Logout"),
+              trailing: IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.logout,
+                    color: Colors.blue,
+                  )),
+            ),
+            Divider(
+              thickness: 1,
+              color: Colors.white.withOpacity(0.2),
+            ),
+            ListTile(
+              onTap: () => recordingController.deleteAllRecordings(),
               textColor: Colors.grey,
               title: Text("Delete all recordings"),
               trailing: IconButton(
-                onPressed: () => recorderController.deleteAllRecordings(), 
-                icon: Icon(
-                  Icons.delete,
-                  color: Colors.red,
-                )),
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.delete,
+                    color: Colors.red,
+                  )),
             ),
-            Divider(),
+            Divider(
+              thickness: 1,
+              color: Colors.white.withOpacity(0.2),
+            ),
             // ListTile(
             //   textColor: Colors.grey,
             //   title: Text("Sound Effects"),
@@ -93,7 +165,7 @@ class SettingsScreen extends StatelessWidget {
             //   )),
             // ),
           ],
-      ),
+        ),
       ),
     );
   }

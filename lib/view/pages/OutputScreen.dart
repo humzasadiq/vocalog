@@ -13,11 +13,15 @@ class Outputscreen extends StatefulWidget {
     required this.filePath,
     required this.index,
     required this.fileStat,
+    required this.transcript,
+    required this.output,
     required this.fileDuration,
   });
 
   final String filePath;
   final String fileStat;
+  final String transcript;
+  final String output;
   final int index;
   final Color calar;
   final String fileDuration;
@@ -37,21 +41,21 @@ class _OutputscreenState extends State<Outputscreen> {
         .join('/');
 
     return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.black,
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          backgroundColor: widget.calar,
+          backgroundColor: Colors.black,
           title: Row(
             children: [
               IconButton(
                 onPressed: () => Get.back(),
                 icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                color: Colors.white,
+                color: widget.calar,
               ),
               Text(
                 "Recording ${widget.index + 1}",
-                style: const TextStyle(
-                  color: Colors.white,
+                style:  TextStyle(
+                  color: widget.calar,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -71,8 +75,8 @@ class _OutputscreenState extends State<Outputscreen> {
                     Row(children: [
                       Text(
                         "Dated: ",
-                        style: const TextStyle(
-                          color: Colors.black87,
+                        style: TextStyle(
+                          color: widget.calar,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -80,7 +84,7 @@ class _OutputscreenState extends State<Outputscreen> {
                       Text(
                         "${widget.fileStat}",
                         style: const TextStyle(
-                          color: Colors.black87,
+                          color: Colors.white,
                           fontSize: 14,
                         ),
                       ),
@@ -90,8 +94,8 @@ class _OutputscreenState extends State<Outputscreen> {
                         Row(children: [
                           Text(
                             "Day: ",
-                            style: const TextStyle(
-                              color: Colors.black87,
+                            style: TextStyle(
+                              color: widget.calar,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
@@ -99,7 +103,7 @@ class _OutputscreenState extends State<Outputscreen> {
                           Text(
                             "${datetoWeekDayName(widget.fileStat)}",
                             style: const TextStyle(
-                              color: Colors.black87,
+                              color: Colors.white,
                               fontSize: 14,
                             ),
                           ),
@@ -109,8 +113,8 @@ class _OutputscreenState extends State<Outputscreen> {
                           children: [
                             Text(
                               "Duration: ",
-                              style: const TextStyle(
-                                color: Colors.black87,
+                              style: TextStyle(
+                                color: widget.calar,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
                               ),
@@ -118,13 +122,19 @@ class _OutputscreenState extends State<Outputscreen> {
                             Text(
                               "${widget.fileDuration}",
                               style: const TextStyle(
-                                color: Colors.black87,
+                                color: Colors.white,
                                 fontSize: 14,
                               ),
                             )
                           ],
                         )
                       ],
+                    ),
+                    SizedBox(height: 20),
+                    Divider(
+                      color: Colors.white.withOpacity(0.2),
+                      thickness: 1,
+                      height: 1,
                     ),
                   ],
                 ),
@@ -149,12 +159,13 @@ class _OutputscreenState extends State<Outputscreen> {
       case 0:
         return AudioNtranscript(
             filePath: widget.filePath,
-            dirPath: dirPath,
+            transcript: widget.transcript,
             calar: widget.calar); // Audio + Transcript Widget
       case 1:
-        return AIResponseWidget(filePath: dirPath); // AI Response Widget
+        return AIResponseWidget(output: widget.output, calar: widget.calar,); // AI Response Widget
       case 2:
-        return ChatWithMeeting(filePath: dirPath, calar: widget.calar); // Chat with meeting Widget
+        return ChatWithMeeting(
+            filePath: dirPath, calar: widget.calar); // Chat with meeting Widget
       default:
         return const Center(
           child: Text(

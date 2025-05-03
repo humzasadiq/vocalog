@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppConstant {
   static String AppMainName = "vocalog";
   static String AppPoweredBy = "Powered by wahab";
-  static Color primary = const Color(0xFFD285FF);
+  static Color primary = const Color.fromARGB(255, 82, 220, 255);
   static String domain = "3.109.157.254:3000";
   static String domain2 = "192.168.18.37:3000";
 }

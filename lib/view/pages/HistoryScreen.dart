@@ -1,93 +1,139 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_swipe_action_cell/core/cell.dart';
 import 'dart:io';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:get/get.dart';
+import 'package:vocalog/view/Widgets/MainAppBar.dart';
 import 'package:vocalog/view/pages/OutputScreen.dart';
 import 'package:just_audio/just_audio.dart';
+
+import '../../controllers/RecordingController.dart';
 
 class HistoryScreen extends StatelessWidget {
   HistoryScreen({super.key});
   final player = AudioPlayer();
+  final RecordingController recordingController =
+      Get.put(RecordingController());
 
   @override
   Widget build(BuildContext context) {
-    var path = "/storage/emulated/0/VocalogRecordings";
+    // var path = "/storage/emulated/0/VocalogRecordings";
     return Scaffold(
       // backgroundColor: Colors.black,
-      backgroundColor: Color(0xFF101010),
-      appBar: AppBar(
-        backgroundColor: Color(0xFF101010),
-        // backgroundColor: Color(0xFF7550F1),
-        centerTitle: true,
-        title: Text(
-          "[History]",
-          style: TextStyle(color: Colors.white, fontSize: 18),
-          // style: TextStyle(color: Colors.black, fontSize: 18),
-        ),
-      ),
+      // backgroundColor: Color(0xFF101010),
+      appBar: CustomAppBar(title: "[History]"),
       body: Scrollbar(
-        child: FutureBuilder<List<File>>(
-          future: getRecordingFiles(path),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
-                  child: Text(
-                      style: TextStyle(color: Colors.white70),
-                      'No recordings found'));
-            } else {
-              return ListView.builder(
-                itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
-                  final Color calar =
-                      Color((math.Random().nextDouble() * 0xFFFFFF).toInt())
-                          .withOpacity(1.0);
-                  return TextButton(
-                    style: ButtonStyle(
-                      foregroundColor: MaterialStateProperty.all(Colors.white),
-                      overlayColor: MaterialStateProperty.all(
-                          Colors.grey.shade900.withOpacity(0.5)),
-                    ),
-                    onPressed: () async {
-                      Get.to(Outputscreen(
-                        calar: calar,
-                        filePath: snapshot.data![index].path,
-                        index: index,
-                        fileStat: FileStat.statSync(snapshot.data![index].path)
-                            .modified
-                            .toString(),
-                        fileDuration:
-                            (await player.setUrl(snapshot.data![index].path))
-                              ?.toString()
-                              .split('.')
-                              .first ?? 'Unknown',
-                      ));
-                    },
-                    child: ListTile(
-                      title: Text(
-                        'Recording ${index + 1}',
-                        style: TextStyle(
-                          color: Colors.white,
+        child: Obx(() {
+          final recordings = recordingController.recordings;
+
+          if (recordingController.isLoading.value) {
+            return Center(child: CircularProgressIndicator());
+          } else if (recordings.isEmpty) {
+            return Center(
+              child: Text(
+                'No recordings found',
+                style: TextStyle(color: Colors.white70),
+              ),
+            );
+          } else {
+            return ListView.builder(
+              itemCount: recordings.length,
+              itemBuilder: (context, index) {
+                final recording = recordings[index];
+                print(recording.transcript);
+                final calar =
+                    Color((math.Random().nextDouble() * 0xFFFFFF).toInt())
+                        .withOpacity(1.0);
+
+                return SwipeActionCell(
+                  trailingActions: [
+                    SwipeAction(
+                      performsFirstActionWithFullSwipe: true,
+                      forceAlignmentToBoundary: false,
+                      content: Padding(
+                        padding: const EdgeInsets.all(0),
+                        child: Container(
+                          margin: const EdgeInsets.all(0),
+                          height: Get.height / 6.5,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.red,
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.delete, color: Colors.white),
+                              // SizedBox(width: 8),
+                            ],
+                          ),
                         ),
                       ),
-                      subtitle: Text(
-                        "Dated: ${FileStat.statSync(snapshot.data![index].path).modified.toString()}",
+                      widthSpace: Get.width / 3,
+                      color: Colors.white.withOpacity(0.1),
+                      onTap: (handler) async {
+                        // Perform the deletion
+                        await recordingController
+                            .deleteRecording(recording.id!);
+                      },
+                    ),
+                  ],
+                  key: ObjectKey(recording.id),
+                  child: InkWell(
+                    onTap: () async {
+                      final filePath = recording.fileLink;
+
+                      Get.to(Outputscreen(
+                        transcript: recording.transcript!,
+                        calar: calar,
+                        filePath: filePath,
+                        index: index,
+                        output: recording.output!,
+                        fileStat: recording.datetime?.toString() ?? "Unknown",
+                        fileDuration: (await player.setUrl(filePath))
+                                ?.toString()
+                                .split('.')
+                                .first ??
+                            'Unknown',
+                      ));
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        border: Border(
+                            top: BorderSide(
+                                color: Colors.white.withOpacity(0.2), width: 1),
+                            bottom: BorderSide(
+                                color: Colors.white.withOpacity(0.2),
+                                width: 1)),
+                        // color: calar,
+                        // borderRadius: BorderRadius.circular(10),
                       ),
-                      leading: Icon(
-                        Icons.record_voice_over,
-                        color: calar,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ListTile(
+                          title: Text(
+                            '${recording.topic.toUpperCase()}',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              "Dated: ${recording.datetime?.toString() ?? 'Unknown'}",
+                              style: TextStyle(
+                                  color: Colors.white.withOpacity(0.4)),
+                            ),
+                          ),
+                          leading: Icon(Icons.record_voice_over, color: calar),
+                        ),
                       ),
                     ),
-                  );
-                },
-              );
-            }
-          },
-        ),
+                  ),
+                );
+              },
+            );
+          }
+        }),
       ),
     );
   }

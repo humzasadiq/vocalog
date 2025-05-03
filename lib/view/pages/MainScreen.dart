@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vocalog/controllers/recorder.dart';
 import 'package:vocalog/view/Widgets/MainAppBar.dart';
+import '../../controllers/RecordingController.dart';
 import '../Widgets/MainScreenWidgets/micWidget.dart';
 import '../Widgets/MainScreenWidgets/Waveform.dart';
 import '../Widgets/MainScreenWidgets/options/optionsButton.dart';
@@ -13,12 +14,14 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  final RecorderController recorderController = Get.find<RecorderController>();
+  final RecorderController recorderController = Get.put(RecorderController());
+  final RecordingController recordingController =
+      Get.put(RecordingController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(),
+      appBar: CustomAppBar(title: "[Vocalog]",),
       body: Stack(
         children: [
           // Obx(() => recorderController.isRecording.value

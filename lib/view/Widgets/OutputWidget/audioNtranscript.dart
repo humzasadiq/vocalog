@@ -3,9 +3,14 @@ import 'package:vocalog/view/Widgets/OutputWidget/sub/audioPlayer.dart';
 import 'package:vocalog/view/Widgets/OutputWidget/sub/scriptWidget.dart';
 
 class AudioNtranscript extends StatelessWidget {
-  AudioNtranscript({super.key, required this.filePath, required this.dirPath, required this.calar});
+  AudioNtranscript(
+      {super.key,
+      required this.filePath,
+      required this.calar,
+      required this.transcript});
   final String filePath;
-  final String dirPath;
+
+  final String transcript;
   final Color calar;
 
   @override
@@ -13,7 +18,7 @@ class AudioNtranscript extends StatelessWidget {
     return Column(
       children: [
         Audioplayer(filePath: filePath, calar: calar), // Audio player
-        transcriptWidget(filePath: dirPath), // transcript Widget
+        transcriptWidget(transcript: transcript), // transcript Widget
       ],
     );
   }

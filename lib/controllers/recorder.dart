@@ -4,12 +4,13 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:rive/rive.dart';
 import 'dart:io';
 import 'package:path/path.dart';
+import 'RecordingController.dart';
+import 'UserController.dart';
 import 'transcript_api.dart';
 import 'ai_api.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
@@ -39,6 +40,9 @@ class RecorderController extends GetxController {
   Timer? _amplitudeTimer;
   int _elapsedSeconds = 0;
 
+  final UserController userController = Get.find<UserController>();
+  final RecordingController recordingsController =
+      Get.put(RecordingController());
   @override
   void onInit() async {
     super.onInit();
@@ -60,8 +64,7 @@ class RecorderController extends GetxController {
       // Copy sound files from assets to temp directory
       ByteData startupData =
           await rootBundle.load('assets/sounds/startup1.wav');
-      ByteData stopData =
-          await rootBundle.load('assets/sounds/stop1.wav');
+      ByteData stopData = await rootBundle.load('assets/sounds/stop1.wav');
 
       await File(startupSoundPath)
           .writeAsBytes(startupData.buffer.asUint8List());
@@ -243,13 +246,18 @@ class RecorderController extends GetxController {
         print("Recording saved: $filePath");
         if (filePath != null) {
           String fileName = basename(filePath!);
+          File recordingFile = File(filePath!);
           print("File name: $fileName");
-
+          String? downloadUrl =
+              await recordingsController.uploadRecordingToFirebase(
+                  recordingFile, userController.user.value!.id);
           String? result =
               await TranscriptApi.getTranscript(filePath!, fileName, fileDir!);
           if (result != null) {
             transcript.value = result;
             aiResponse.value = await AIApi.getAIMinutes(result, fileDir!);
+            recordingsController.createRecording(
+                "topic", downloadUrl!, transcript.value, aiResponse.value);
           }
         }
       } else {

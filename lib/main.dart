@@ -1,8 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:vocalog/controllers/RecordingController.dart';
+import 'package:vocalog/view/Auth/SplashScreen.dart';
 import 'package:vocalog/view/pages/HistoryScreen.dart';
 import 'package:vocalog/view/pages/MainScreen.dart';
+import 'package:vocalog/view/pages/SettingsScreen.dart';
 import 'utils/Themes.dart';
 import 'controllers/recorder.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -15,6 +19,8 @@ void main() async {
     print("Failed to load .env file: $e");
   }
   Get.lazyPut(() => RecorderController());
+  Get.lazyPut(() => RecordingController());
+  await Firebase.initializeApp();
   runApp(MyApp());
   configLoading();
 }
@@ -40,12 +46,16 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
       theme: ThemeData(
-          fontFamily: 'IBM',
-          scaffoldBackgroundColor: Colors.black,
-          colorScheme: ColorScheme.dark(primary: Colors.grey.shade600)),
+        fontFamily: 'IBM',
+        scaffoldBackgroundColor: Colors.black,
+        colorScheme: ColorScheme.dark(
+            primary: Colors.grey.shade600,
+            tertiaryFixed: AppConstant.primary,
+            tertiary: AppConstant.primary),
+      ),
       title: 'vocalog',
       builder: EasyLoading.init(),
-      home: VocalogScreen(),
+      home: SplashScreen(),
     );
   }
 }
@@ -102,6 +112,10 @@ class _VocalogScreenState extends State<VocalogScreen> {
                 icon: Icon(Icons.history),
                 label: 'History',
               ),
+              NavigationDestination(
+                icon: Icon(Icons.settings),
+                label: 'Setting',
+              ),
             ],
           ),
         ),
@@ -109,6 +123,7 @@ class _VocalogScreenState extends State<VocalogScreen> {
       body: <Widget>[
         MainScreen(),
         HistoryScreen(),
+        SettingsScreen(),
       ][currentIndex],
     );
   }

@@ -4,77 +4,43 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class AIResponseWidget extends StatefulWidget {
-  final String filePath;
+  final String output;
+  final Color calar;
 
-  const AIResponseWidget({Key? key, required this.filePath}) : super(key: key);
+  const AIResponseWidget({Key? key, required this.output, required this.calar})
+      : super(key: key);
 
   @override
   _AIResponseWidgetState createState() => _AIResponseWidgetState();
 }
 
 class _AIResponseWidgetState extends State<AIResponseWidget> {
-  late String _markdownContent;
-  late bool _hasContent;
-
   @override
   void initState() {
     super.initState();
-    _loadContent();
-  }
-
-  void _loadContent() {
-    final directory = Directory(widget.filePath);
-    final outputFile = File("${widget.filePath}/output.md");
-
-    setState(() {
-      _hasContent = directory.existsSync() && outputFile.existsSync();
-      _markdownContent = _hasContent ? outputFile.readAsStringSync() : '';
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        if (!_hasContent) {
-          return Center(
-            child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  Text(
-                    "Processing, Check back after a few seconds",
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 10),
-                  LoadingAnimationWidget.staggeredDotsWave(
-                    color: Colors.black,
-                    size: 50,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
         return SingleChildScrollView(
           child: Column(
             children: [
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(50, 30),
-                  backgroundColor: Colors.white,
-                  side: BorderSide(color: Colors.black),
+                  backgroundColor: Colors.black,
+                  side: BorderSide(color: widget.calar),
                 ),
                 onPressed: () async {
-                  final pdfPath = "${widget.filePath}/output.pdf";
+                  final dir =
+                      await getApplicationDocumentsDirectory(); // or getTemporaryDirectory()
+                  final pdfPath = "${dir.path}/output.pdf";
                   if (!File(pdfPath).existsSync()) {
                     try {
                       // Show loading indicator
@@ -90,7 +56,7 @@ class _AIResponseWidgetState extends State<AIResponseWidget> {
                       final response = await http.post(
                         Uri.parse('https://md-to-pdf.fly.dev'),
                         body: {
-                          'markdown': _markdownContent,
+                          'markdown': widget.output,
                           'engine': 'weasyprint',
                         },
                       );
@@ -142,22 +108,19 @@ class _AIResponseWidgetState extends State<AIResponseWidget> {
                 },
                 label: Text(
                   "Export to PDF",
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: widget.calar),
                 ),
-                icon: Icon(Icons.download),
-              ),
-              Divider(
-                color: Colors.black12,
+                icon: Icon(Icons.download,color: widget.calar,),
               ),
               Container(
                 decoration: const BoxDecoration(),
                 child: Markdown(
-                  data: _markdownContent,
+                  data: widget.output,
                   styleSheet: MarkdownStyleSheet(
-                    p: GoogleFonts.tinos(color: Colors.black),
-                    h1: GoogleFonts.tinos(color: Colors.black),
-                    h2: GoogleFonts.tinos(color: Colors.black),
-                    listBullet: GoogleFonts.tinos(color: Colors.black),
+                    p: GoogleFonts.tinos(color: Colors.white),
+                    h1: GoogleFonts.tinos(color: Colors.white),
+                    h2: GoogleFonts.tinos(color: Colors.white),
+                    listBullet: GoogleFonts.tinos(color: Colors.white),
                   ),
                   // Add these parameters to help with layout
                   shrinkWrap: true,
