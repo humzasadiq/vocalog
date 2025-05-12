@@ -98,6 +98,8 @@ flutter:
     - assets/icon2.png
     - assets/icon3.png
     - assets/rive/vocalog.riv
+    - assets/template/message.txt
+    - assets/template/meeting.txt
     - .env
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

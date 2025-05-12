@@ -19,7 +19,7 @@ class TranscriptApi {
       request.headers['xi-api-key'] = apiKey;
       request.fields['model_id'] = 'scribe_v1';
       request.fields['diarize'] = 'true';
-      request.fields['language_code'] = 'eng';
+      // request.fields['language_code'] = 'eng';
       request.files.add(await http.MultipartFile.fromPath('file', filePath));
       request.fields['file'] = fileName;
 

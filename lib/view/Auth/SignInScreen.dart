@@ -43,28 +43,16 @@ class _LogInScreenState extends State<LogInScreen> {
             SizedBox(
                 width: Get.width * 0.8,
                 height: Get.height * 0.15,
-                child: Positioned(
-                  right: Get.width * 0.01,
-                  top: 0,
-                  child: Opacity(
+                child: Opacity(
                     opacity: 0.6,
                     child: Image.asset(
-                      "assets/logo.png",
-                      width: Get.width * 0.3,
-                      height: Get.height * 0.15,
-                      fit: BoxFit.contain,
+                        "assets/logo.png",
+                        width: Get.width * 0.3,
+                        height: Get.height * 0.15,
+                        fit: BoxFit.contain,
                     ),
-                  ),
                 )
-                // Text(
-                //   "Welcome Back!",
-                //   textScaleFactor: MediaQuery.of(context).textScaler.scale(3),
-                //   style: TextStyle(
-                //       color: currentTheme.primaryColorDark,
-                //       fontWeight: FontWeight.bold),
-                //   softWrap: true,
-                // ),
-                ).pOnly(top: Get.height * 0.1, left: Get.width * 0.02),
+            ).pOnly(top: Get.height * 0.1, left: Get.width * 0.02),
             Row(
               children: [
                 Text(

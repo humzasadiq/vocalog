@@ -38,79 +38,82 @@ class _AIResponseWidgetState extends State<AIResponseWidget> {
                   side: BorderSide(color: widget.calar),
                 ),
                 onPressed: () async {
-                  final dir =
-                      await getApplicationDocumentsDirectory(); // or getTemporaryDirectory()
-                  final pdfPath = "${dir.path}/output.pdf";
-                  if (!File(pdfPath).existsSync()) {
-                    try {
-                      // Show loading indicator
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          backgroundColor: Colors.grey,
-                          content: Text("Generating PDF..."),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
+                  final dir = await getApplicationDocumentsDirectory();
+                  // Create a unique filename based on content hash
+                  final String contentHash = widget.output.hashCode.toString();
+                  final pdfPath = "${dir.path}/output_$contentHash.pdf";
 
-                      // Prepare the request
-                      final response = await http.post(
-                        Uri.parse('https://md-to-pdf.fly.dev'),
-                        body: {
-                          'markdown': widget.output,
-                          'engine': 'weasyprint',
-                        },
-                      );
+                  try {
+                    // Show loading indicator
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: Colors.grey,
+                        content: Text("Generating PDF..."),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
 
-                      if (response.statusCode == 200) {
-                        // Save the PDF file
-                        await File(pdfPath).writeAsBytes(response.bodyBytes);
+                    // Prepare the request
+                    final response = await http.post(
+                      Uri.parse('https://md-to-pdf.fly.dev'),
+                      body: {
+                        'markdown': widget.output,
+                        'engine': 'weasyprint',
+                      },
+                    );
 
-                        // Show success message
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              backgroundColor: Colors.green,
-                              content: Text("PDF generated successfully"),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        }
+                    if (response.statusCode == 200) {
+                      // Save the PDF file
+                      await File(pdfPath).writeAsBytes(response.bodyBytes);
 
-                        // Share the generated PDF
-                        await Share.shareXFiles(
-                          [XFile(pdfPath)],
-                          subject: 'Generated PDF',
-                        );
-                      } else {
-                        throw Exception(
-                            'Failed to generate PDF: ${response.statusCode}');
-                      }
-                    } catch (e) {
-                      debugPrint("Error generating PDF: $e");
+                      // Show success message
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: Colors.red,
-                            content:
-                                Text("Error generating PDF: ${e.toString()}"),
-                            duration: const Duration(seconds: 2),
+                          const SnackBar(
+                            backgroundColor: Colors.green,
+                            content: Text("PDF generated successfully"),
+                            duration: Duration(seconds: 2),
                           ),
                         );
                       }
+
+                      // Share the generated PDF
+                      await Share.shareXFiles(
+                        [XFile(pdfPath)],
+                        subject: 'Generated PDF',
+                      );
+
+                      // Delete the file after sharing
+                      await File(pdfPath).delete();
+                    } else {
+                      throw Exception(
+                          'Failed to generate PDF: ${response.statusCode}');
                     }
-                  } else {
-                    // If PDF already exists, just share it
-                    await Share.shareXFiles(
-                      [XFile(pdfPath)],
-                      subject: 'Generated PDF',
-                    );
+                  } catch (e) {
+                    debugPrint("Error generating PDF: $e");
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: Colors.red,
+                          content:
+                              Text("Error generating PDF: ${e.toString()}"),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
                   }
                 },
                 label: Text(
                   "Export to PDF",
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: widget.calar),
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: widget.calar),
                 ),
-                icon: Icon(Icons.download,color: widget.calar,),
+                icon: Icon(
+                  Icons.download,
+                  color: widget.calar,
+                ),
               ),
               Container(
                 decoration: const BoxDecoration(),

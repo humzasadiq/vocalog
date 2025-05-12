@@ -335,40 +335,43 @@ class _ChatWithMeetingState extends State<ChatWithMeeting> {
               ),
             ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  style: const TextStyle(color: Colors.black),
-                  controller: _textController,
-                  decoration: InputDecoration(
-                    fillColor: widget.calar.withOpacity(0.05),
-                    filled: true,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
+          Padding(
+            padding: const EdgeInsets.only(left:10,bottom: 30),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    style: const TextStyle(color: Colors.black),
+                    controller: _textController,
+                    decoration: InputDecoration(
+                      fillColor: widget.calar.withOpacity(0.05),
+                      filled: true,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: widget.calar),
+                      ),
+                      hintText: 'Ask about your meeting...',
+                      hintStyle: TextStyle(color: Colors.grey, fontSize: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: widget.calar),
-                    ),
-                    hintText: 'Ask about your meeting...',
-                    hintStyle: TextStyle(color: Colors.grey, fontSize: 12),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                    onSubmitted: _handleSubmitted,
                   ),
-                  onSubmitted: _handleSubmitted,
                 ),
-              ),
-              const SizedBox(width: 10),
-              IconButton(
-                onPressed: () => _handleSubmitted(_textController.text),
-                icon: const Icon(Icons.send),
-                color: widget.calar,
-              ),
-            ],
+                const SizedBox(width: 10),
+                IconButton(
+                  onPressed: () => _handleSubmitted(_textController.text),
+                  icon: const Icon(Icons.send),
+                  color: widget.calar,
+                ),
+              ],
+            ),
           ),
         ],
       ),
