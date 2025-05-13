@@ -34,7 +34,10 @@ class SettingsScreen extends StatelessWidget {
         centerTitle: true,
         title: Text(
           "[Settings]",
-          style: TextStyle(color: Colors.white, fontSize: 18),
+          style: TextStyle(
+            fontFamily: 'IBM',
+            color: Colors.white, fontSize: 18
+            ),
         ),
       ),
       body: Center(

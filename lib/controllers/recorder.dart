@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RecorderController extends GetxController {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
@@ -43,11 +44,23 @@ class RecorderController extends GetxController {
   final UserController userController = Get.find<UserController>();
   final RecordingController recordingsController =
       Get.put(RecordingController());
+
+  // New variables for options
+  final topic = "".obs;
+  final logType = "Meeting Minutes".obs;
+  final language = "auto".obs; // Default to Auto Detect
+
+  // Keys for SharedPreferences
+  static const String TOPIC_KEY = 'recording_topic';
+  static const String LOG_TYPE_KEY = 'recording_log_type';
+  static const String LANGUAGE_KEY = 'recording_language';
+
   @override
   void onInit() async {
     super.onInit();
     await _initializeSoundEffects();
     await _initializeRecorder();
+    await _loadSavedOptions();
   }
 
   Future<void> reinitializeSoundEffects() async {
@@ -252,12 +265,18 @@ class RecorderController extends GetxController {
               await recordingsController.uploadRecordingToFirebase(
                   recordingFile, userController.user.value!.id);
           String? result =
-              await TranscriptApi.getTranscript(filePath!, fileName, fileDir!);
+              await TranscriptApi.getTranscript(filePath!, fileName, fileDir!, language.value);
           if (result != null) {
             transcript.value = result;
-            aiResponse.value = await AIApi.getAIMinutes(result, fileDir!);
+            Map<String, String> aiResult = await AIApi.getAIMinutes(
+              result, 
+              fileDir!,
+              logType.value
+            );
+            aiResponse.value = aiResult['response'] ?? "";
+            String extractedTopic = aiResult['topic'] ?? "Unknown Topic";
             recordingsController.createRecording(
-                "topic", downloadUrl!, transcript.value, aiResponse.value);
+                extractedTopic, downloadUrl!, transcript.value, aiResponse.value);
           }
         }
       } else {
@@ -317,6 +336,35 @@ class RecorderController extends GetxController {
     final minutes = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
     final secs = (seconds % 60).toString().padLeft(2, '0');
     return "$hours:$minutes:$secs";
+  }
+
+  // Method to update topic with local storage
+  void setTopic(String newTopic) async {
+    topic.value = newTopic;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(TOPIC_KEY, newTopic);
+  }
+
+  // Method to update log type with local storage
+  void setLogType(String newLogType) async {
+    logType.value = newLogType;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(LOG_TYPE_KEY, newLogType);
+  }
+
+  // Method to update language with local storage
+  void setLanguage(String newLanguage) async {
+    language.value = newLanguage;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(LANGUAGE_KEY, newLanguage);
+  }
+
+  // Load saved options from SharedPreferences
+  Future<void> _loadSavedOptions() async {
+    final prefs = await SharedPreferences.getInstance();
+    topic.value = prefs.getString(TOPIC_KEY) ?? "";
+    logType.value = prefs.getString(LOG_TYPE_KEY) ?? "Meeting Minutes";
+    language.value = prefs.getString(LANGUAGE_KEY) ?? "auto";
   }
 
   @override

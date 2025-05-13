@@ -112,8 +112,10 @@ class _AudioplayerState extends State<Audioplayer> {
   Widget build(BuildContext context) {
     return Obx(() {
       if (isLoading.value) {
-        return const Center(
-          child: CircularProgressIndicator(),
+        return Center(
+          child: CircularProgressIndicator(
+            color: widget.calar,
+          ),
         );
       }
       return Container(
@@ -176,22 +178,32 @@ class _AudioplayerState extends State<Audioplayer> {
             const SizedBox(width: 10),
             IconButton(
               onPressed: () async {
+                if (_localFilePath == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Colors.red,
+                      content: Text('Audio is still loading, please wait'),
+                    ),
+                  );
+                  return;
+                }
+                
                 try {
                   await Share.shareXFiles(
-                    [XFile(widget.filePath)],
+                    [XFile(_localFilePath!)], // Use local file path instead of remote URL
                     subject: 'Audio Recording',
                   );
                 } catch (e) {
                   debugPrint('Error sharing file: $e');
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       backgroundColor: Colors.red,
-                      content: Text('Failed to share file'),
+                      content: Text('Failed to share file: ${e.toString()}'),
                     ),
                   );
                 }
               },
-              icon: Icon(
+              icon: const Icon(
                 Icons.ios_share,
                 color: Colors.white,
               ),

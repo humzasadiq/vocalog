@@ -8,10 +8,18 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter/services.dart';
 
 class ChatWithMeeting extends StatefulWidget {
-  const ChatWithMeeting(
-      {super.key, required this.filePath, required this.calar});
+  const ChatWithMeeting({
+    super.key,
+    required this.filePath,
+    required this.calar,
+    required this.transcript,
+    required this.output,
+  });
+
   final String filePath;
   final Color calar;
+  final String transcript;
+  final String output;
 
   @override
   State<ChatWithMeeting> createState() => _ChatWithMeetingState();
@@ -20,18 +28,12 @@ class ChatWithMeeting extends StatefulWidget {
 class _ChatWithMeetingState extends State<ChatWithMeeting> {
   final TextEditingController _textController = TextEditingController();
   List<Map<String, dynamic>> _messages = [];
-  late String transcriptPath;
-  late String meetingMinutesPath;
   late File _messagesFile;
-  String? _transcriptContent;
-  String? _meetingMinutesContent;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    transcriptPath = "${widget.filePath}/transcript.txt";
-    meetingMinutesPath = "${widget.filePath}/output.md";
     _messagesFile = File("${widget.filePath}/chat_messages.json");
     _loadInitialData();
   }
@@ -42,28 +44,10 @@ class _ChatWithMeetingState extends State<ChatWithMeeting> {
     });
 
     await _loadMessages();
-    await _loadMeetingContent();
 
     setState(() {
       _isLoading = false;
     });
-  }
-
-  Future<void> _loadMeetingContent() async {
-    try {
-      final transcriptFile = File(transcriptPath);
-      final meetingMinutesFile = File(meetingMinutesPath);
-
-      if (await transcriptFile.exists()) {
-        _transcriptContent = await transcriptFile.readAsString();
-      }
-
-      if (await meetingMinutesFile.exists()) {
-        _meetingMinutesContent = await meetingMinutesFile.readAsString();
-      }
-    } catch (e) {
-      debugPrint('Error loading meeting content: $e');
-    }
   }
 
   Future<void> _loadMessages() async {
@@ -78,8 +62,7 @@ class _ChatWithMeetingState extends State<ChatWithMeeting> {
               _messages = List<String>.from(decodedData)
                   .map((text) => {
                         'text': text,
-                        'isUser':
-                            true,
+                        'isUser': true,
                         'timestamp': DateTime.now().toIso8601String(),
                       })
                   .toList();
@@ -116,34 +99,28 @@ class _ChatWithMeetingState extends State<ChatWithMeeting> {
         temperature: 0.7,
         topK: 64,
         topP: 0.95,
-        maxOutputTokens: 65536,
+        maxOutputTokens: 2048,
         responseMimeType: 'text/plain',
       ),
     );
 
     String systemPrompt =
-        "You are an assistant helping with questions about a meeting. dont ever provide any information about the meeting that is not in the meeting transcript or meeting minutes. If the information isn't in the meeting content, please say so. Format your responses using Markdown for better readability. also dont use code blocks.";
+        "You are an assistant helping with questions about a meeting. Don't ever provide any information about the meeting that is not in the meeting transcript or meeting minutes. If the information isn't in the meeting content, please say so. Format your responses using Markdown for better readability.";
 
-    if (_transcriptContent != null && _transcriptContent!.isNotEmpty) {
+    if (widget.transcript.isNotEmpty) {
       systemPrompt +=
-          "Here is the meeting transcript:\n\n$_transcriptContent\n\n";
+          "\n\nHere is the meeting transcript:\n\n${widget.transcript}\n\n";
     }
 
-    if (_meetingMinutesContent != null && _meetingMinutesContent!.isNotEmpty) {
+    if (widget.output.isNotEmpty) {
       systemPrompt +=
-          "Here are the meeting minutes:\n\n$_meetingMinutesContent\n\n";
+          "\n\nHere are the meeting minutes:\n\n${widget.output}\n\n";
     }
 
-    if (_transcriptContent != null || _meetingMinutesContent != null) {
-      systemPrompt +=
-          "Based on this meeting information, please answer the following user question concisely and accurately. If the information isn't in the meeting content, please say so. Format your responses using Markdown for better readability.";
-    } else {
-      systemPrompt +=
-          "I don't have the meeting transcript or minutes available. I'll do my best to answer based on general knowledge. Format your responses using Markdown for better readability.";
-    }
+    systemPrompt +=
+        "\nBased on this meeting information, please answer the following user question concisely and accurately. If the information isn't in the meeting content, please say so. Format your responses using Markdown for better readability.";
 
     final List<Content> history = [];
-
     history.add(Content.text(systemPrompt));
 
     final recentMessages = _messages.length > 6
@@ -154,7 +131,6 @@ class _ChatWithMeetingState extends State<ChatWithMeeting> {
     }
 
     final chat = model.startChat(history: history);
-
     final content = Content.text(userMessage);
 
     try {
@@ -199,163 +175,293 @@ class _ChatWithMeetingState extends State<ChatWithMeeting> {
       width: MediaQuery.of(context).size.width * 0.9,
       height: MediaQuery.of(context).size.height * 0.65,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.black12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
+          // Chat Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.black12)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.chat_outlined, color: widget.calar),
+                SizedBox(width: 8),
+                Text(
+                  'Chat with Meeting',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Messages List
           Expanded(
             child: _isLoading && _messages.isEmpty
                 ? Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(widget.calar),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(widget.calar),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Loading chat history...',
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
                   )
-                : ListView.builder(
-                    itemCount: _messages.length,
-                    padding: const EdgeInsets.all(8.0),
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      final isUserMessage = message['isUser'] == true;
-
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4.0),
-                        child: Row(
-                          mainAxisAlignment: isUserMessage
-                              ? MainAxisAlignment.end
-                              : MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                : _messages.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              constraints: BoxConstraints(
-                                maxWidth:
-                                    MediaQuery.of(context).size.width * 0.7,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                                vertical: 10.0,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isUserMessage
-                                    ? widget.calar.withOpacity(0.2)
-                                    : Colors.grey.shade200,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Stack(
-                                children: [
-                                  isUserMessage
-                                      ? Text(
-                                          message['text'],
-                                          style: const TextStyle(
-                                            color: Colors.black87,
-                                          ),
-                                        )
-                                      : MarkdownBody(
-                                          data: message['text'],
-                                          styleSheet: MarkdownStyleSheet(
-                                            p: TextStyle(color: Colors.black87),
-                                            h1: TextStyle(
-                                                color: Colors.black,
-                                                fontWeight: FontWeight.bold),
-                                            h2: TextStyle(
-                                                color: Colors.black,
-                                                fontWeight: FontWeight.bold),
-                                            h3: TextStyle(
-                                                color: Colors.black,
-                                                fontWeight: FontWeight.bold),
-                                            listBullet: TextStyle(
-                                                color: Colors.black,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          shrinkWrap: true,
-                                        ),
-                                ],
+                            Icon(
+                              Icons.assistant,
+                              size: 48,
+                              color: Colors.black26,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Start a conversation about the meeting',
+                              style: TextStyle(
+                                color: Colors.black54,
+                                fontSize: 14,
                               ),
                             ),
-                            if (!isUserMessage)
-                              IconButton(
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                icon: Icon(
-                                  Icons.copy,
-                                  size: 16,
-                                  color: Colors.grey.shade600,
-                                ),
-                                onPressed: () {
-                                  Clipboard.setData(ClipboardData(
-                                    text: message['text'],
-                                  ));
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(
-                                    SnackBar(
-                                      backgroundColor: widget.calar,
-                                      content: const Text(
-                                          style: TextStyle(color: Colors.white),
-                                          'Copied to clipboard'),
-                                      duration: const Duration(seconds: 2),
-                                    ),
-                                  );
-                                },
-                              ),
                           ],
                         ),
-                      );
-                    },
-                  ),
+                      )
+                    : ListView.builder(
+                        itemCount: _messages.length,
+                        padding: const EdgeInsets.all(16),
+                        itemBuilder: (context, index) {
+                          final message = _messages[index];
+                          final isUserMessage = message['isUser'] == true;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              mainAxisAlignment: isUserMessage
+                                  ? MainAxisAlignment.end
+                                  : MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (!isUserMessage) ...[
+                                  CircleAvatar(
+                                    backgroundColor:
+                                        widget.calar.withOpacity(0.1),
+                                    radius: 16,
+                                    child: Image(
+                                        width: 30,
+                                        height: 30,
+                                        image: AssetImage('assets/icon.png')),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                Flexible(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isUserMessage
+                                          ? widget.calar.withOpacity(0.1)
+                                          : Colors.grey.withOpacity(0.1),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(
+                                            isUserMessage ? 16 : 4),
+                                        topRight: Radius.circular(
+                                            isUserMessage ? 4 : 16),
+                                        bottomLeft: const Radius.circular(16),
+                                        bottomRight: const Radius.circular(16),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (!isUserMessage)
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                  'vocalog AI',
+                                                  style: TextStyle(
+                                                    color: widget.calar,
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                              ),
+                                              IconButton(
+                                                      padding: EdgeInsets.zero,
+                                                      constraints: const BoxConstraints(),
+                                                      icon: Icon(
+                                                        Icons.copy,
+                                                        size: 18,
+                                                        color: Colors.black38,
+                                                      ),
+                                                      onPressed: () {
+                                                        Clipboard.setData(ClipboardData(
+                                                          text: message['text'],
+                                                        ));
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          SnackBar(
+                                                            backgroundColor: widget.calar,
+                                                            content: const Text(
+                                                              'Copied to clipboard',
+                                                              style: TextStyle(color: Colors.white),
+                                                            ),
+                                                            duration: const Duration(seconds: 2),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                            ],
+                                          ),
+                                        isUserMessage
+                                            ? Text(
+                                                message['text'],
+                                                style: const TextStyle(
+                                                  color: Colors.black87,
+                                                ),
+                                              )
+                                            : MarkdownBody(
+                                                data: message['text'],
+                                                styleSheet: MarkdownStyleSheet(
+                                                  p: const TextStyle(
+                                                    color: Colors.black87,
+                                                    fontSize: 14,
+                                                  ),
+                                                  h1: TextStyle(
+                                                    color: widget.calar,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 18,
+                                                  ),
+                                                  h2: TextStyle(
+                                                    color: widget.calar,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                  h3: TextStyle(
+                                                    color: widget.calar,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                  listBullet: const TextStyle(
+                                                    color: Colors.black87,
+                                                  ),
+                                                  blockquote: const TextStyle(
+                                                    color: Colors.black54,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                  code: TextStyle(
+                                                    color: widget.calar,
+                                                    backgroundColor: Colors
+                                                        .black
+                                                        .withOpacity(0.05),
+                                                  ),
+                                                ),
+                                              ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                if (isUserMessage) ...[
+                                  const SizedBox(width: 8),
+                                  CircleAvatar(
+                                    backgroundColor:
+                                        widget.calar.withOpacity(0.1),
+                                    radius: 16,
+                                    child: Icon(
+                                      Icons.person,
+                                      size: 18,
+                                      color: widget.calar,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          );
+                        },
+                      ),
           ),
+          // Loading indicator
           if (_isLoading && _messages.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Colors.black12),
+                ),
+              ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
-                    width: 20,
-                    height: 20,
+                    width: 16,
+                    height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(widget.calar),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Text(
-                    "Thinking...",
+                    "AI is thinking...",
                     style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
+                      color: Colors.black54,
+                      fontSize: 14,
                     ),
                   ),
                 ],
               ),
             ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.only(left:10,bottom: 30),
+          // Input field
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: Colors.black12)),
+            ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
-                    style: const TextStyle(color: Colors.black),
+                    style: const TextStyle(color: Colors.black87),
                     controller: _textController,
                     decoration: InputDecoration(
-                      fillColor: widget.calar.withOpacity(0.05),
+                      fillColor: Colors.grey.withOpacity(0.1),
                       filled: true,
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: widget.calar),
-                      ),
                       hintText: 'Ask about your meeting...',
-                      hintStyle: TextStyle(color: Colors.grey, fontSize: 12),
+                      hintStyle: TextStyle(
+                        color: Colors.black38,
+                        fontSize: 14,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
@@ -364,11 +470,17 @@ class _ChatWithMeetingState extends State<ChatWithMeeting> {
                     onSubmitted: _handleSubmitted,
                   ),
                 ),
-                const SizedBox(width: 10),
-                IconButton(
-                  onPressed: () => _handleSubmitted(_textController.text),
-                  icon: const Icon(Icons.send),
-                  color: widget.calar,
+                const SizedBox(width: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: widget.calar,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    onPressed: () => _handleSubmitted(_textController.text),
+                    icon: const Icon(Icons.send_rounded),
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),

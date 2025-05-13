@@ -46,12 +46,12 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
       theme: ThemeData(
-        fontFamily: 'IBM',
         scaffoldBackgroundColor: Colors.black,
         colorScheme: ColorScheme.dark(
-            primary: Colors.grey.shade600,
-            tertiaryFixed: AppConstant.primary,
-            tertiary: AppConstant.primary),
+          primary: Colors.grey.shade600,
+          tertiaryFixed: AppConstant.primary,
+          tertiary: AppConstant.primary,
+        ),
       ),
       title: 'vocalog',
       builder: EasyLoading.init(),
@@ -95,6 +95,11 @@ class _VocalogScreenState extends State<VocalogScreen> {
             }),
           ),
           child: NavigationBar(
+            labelTextStyle: MaterialStateProperty.all(
+              TextStyle(
+                fontFamily: 'IBM',
+              ),
+            ),
             onDestinationSelected: (int index) {
               if (!controller.isRecording.value) {
                 setState(() {

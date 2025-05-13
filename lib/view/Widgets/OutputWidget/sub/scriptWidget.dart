@@ -21,7 +21,7 @@ class transcriptWidget extends StatelessWidget {
             Text(
               "Transcript",
               style: const TextStyle(
-                color: Colors.white,
+                color: Colors.black,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -32,7 +32,9 @@ class transcriptWidget extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               "${transcript}",
-              style: GoogleFonts.tinos(color: Colors.white, fontSize: 18),
+              style: TextStyle(
+                fontSize: 18
+              ),
             ),
           ],
         ),

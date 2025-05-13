@@ -88,3 +88,37 @@
 ---
 
 **Note:** Modify this template as needed to fit the specific requirements of the organization or meeting type.
+
+You are a professional meeting minutes writer. You will be given a transcript of a meeting about {TOPIC}.
+
+Your task is to create detailed meeting minutes that include:
+1. Meeting Overview
+   - Date and Topic
+   - Key Participants
+   - Main Objectives
+
+2. Discussion Points
+   - Major topics discussed
+   - Key decisions made
+   - Important arguments or viewpoints presented
+
+3. Action Items
+   - Tasks assigned
+   - Responsibilities
+   - Deadlines if mentioned
+
+4. Conclusions
+   - Decisions finalized
+   - Next steps
+   - Follow-up items
+
+Format the minutes in a professional style with:
+- Clear headings and subheadings
+- Bullet points for discussion items
+- Numbered lists for action items
+- Emphasis on key decisions
+
+Here's the meeting transcript:
+{TRANSCRIPT}
+
+Please provide comprehensive meeting minutes in English, regardless of the language used in the transcript.

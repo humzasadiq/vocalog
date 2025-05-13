@@ -3,102 +3,116 @@ import 'package:get/get.dart';
 import 'package:vocalog/controllers/recorder.dart';
 
 import 'package:vocalog/view/Widgets/MainScreenWidgets/options/logforDropDown.dart';
-import 'package:vocalog/view/Widgets/MainScreenWidgets/options/speakerCheckbox.dart';
-import 'package:vocalog/view/Widgets/MainScreenWidgets/options/topicTextField.dart';
+import 'package:vocalog/view/Widgets/MainScreenWidgets/options/languageDropdown.dart';
 
-class OptionsButton extends StatefulWidget {
-  const OptionsButton({super.key});
+class OptionsButton extends StatelessWidget {
+  OptionsButton({super.key});
 
-  @override
-  State<OptionsButton> createState() => _OptionsButtonState();
-}
-
-class _OptionsButtonState extends State<OptionsButton> {
   final RecorderController recorderController = Get.find<RecorderController>();
-  OverlayEntry? _overlayEntry;
 
-  void _toggleOptions(BuildContext context) {
-    if (_overlayEntry == null) {
-      _overlayEntry = _createOptionsOverlay(context);
-      Overlay.of(context).insert(_overlayEntry!);
-    } else {
-      _overlayEntry?.remove();
-      _overlayEntry = null;
-    }
-  }
-
-  OverlayEntry _createOptionsOverlay(BuildContext context) {
-    return OverlayEntry(
-      builder: (context) => Positioned(
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        child: GestureDetector(
-          onTap: () {
-            _overlayEntry?.remove();
-            _overlayEntry = null;
-          },
-          child: Container(
-            color: Colors.black54,
-            child: Center(
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.9,
-                height: MediaQuery.of(context).size.height * 0.5,
-                decoration: BoxDecoration(
-                  color: Color(0xFF101010),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(5),
-                child: Column(
-                  children: [
-                    // Close button
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: IconButton(
-                        padding: EdgeInsets.all(0),
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        onPressed: () {
-                          _overlayEntry?.remove();
-                          _overlayEntry = null;
-                        },
+  void _showOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: BackdropFilter(
+            filter: ColorFilter.mode(
+              Colors.black.withOpacity(0.5),
+              BlendMode.darken,
+            ),
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.5,
+              minChildSize: 0.4,
+              maxChildSize: 0.8,
+              expand: false,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF101010),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Handle
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 10),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade600,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: Scrollbar(
-                        thumbVisibility: true,
-                        radius: const Radius.circular(10),
+                      // Title
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Text(
+                          'Recording Options',
+                          style: TextStyle(
+                            color: Colors.grey.shade300,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      // Options Content
+                      Expanded(
                         child: SingleChildScrollView(
+                          controller: scrollController,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Column(
                               children: [
-                                Topictextfield(),
                                 const SizedBox(height: 10),
-                                Logfordropdown(),
-                                const SizedBox(height: 10),
-                                SpeakerCheckbox(),
+                                // Log Type Dropdown
+                                Obx(() => Logfordropdown(
+                                  initialValue: recorderController.logType.value,
+                                  onChanged: (value) => recorderController.setLogType(value),
+                                )),
+                                const SizedBox(height: 20),
+                                // Language Dropdown
+                                Obx(() => LanguageDropdown(
+                                  initialValue: recorderController.language.value,
+                                  onChanged: (value) => recorderController.setLanguage(value),
+                                )),
+                                const SizedBox(height: 5),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline, 
+                                      color: Colors.grey,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Regardless of the input language, \nthe output will always be in English.",
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 40), // Extra padding at bottom
+
                               ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -115,38 +129,31 @@ class _OptionsButtonState extends State<OptionsButton> {
             alignment: Alignment.centerLeft,
             side: BorderSide(width: 1.0, color: Colors.grey.shade600),
           ),
-          onPressed: () {
-              _toggleOptions(context);
-          },
+          onPressed: () => _showOptions(context),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Obx(() => Icon(
+                Icons.settings,
+                color: !recorderController.isRecording.value
+                    ? Colors.grey
+                    : Colors.grey.shade300,
+              )),
+              const SizedBox(width: 4),
+              Obx(() => Text(
+                'options',
+                style: TextStyle(
+                  fontFamily: 'IBM',
                   color: !recorderController.isRecording.value
                       ? Colors.grey
                       : Colors.grey.shade300,
-                  Icons.add)),
-              Obx(() => Text(
-                    'options',
-                    style: TextStyle(
-                      color: !recorderController.isRecording.value
-                          ? Colors.grey
-                          : Colors.grey.shade300,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )),
+                  fontWeight: FontWeight.bold,
+                ),
+              )),
             ],
           ),
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    // Ensure overlay is removed when widget is disposed
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-    super.dispose();
   }
 }

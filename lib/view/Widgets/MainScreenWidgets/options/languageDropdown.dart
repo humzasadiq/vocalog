@@ -1,19 +1,48 @@
 import 'package:flutter/material.dart';
 
-class Logfordropdown extends StatelessWidget {
+class LanguageDropdown extends StatelessWidget {
   final String initialValue;
   final Function(String) onChanged;
 
-  const Logfordropdown({
+  const LanguageDropdown({
     Key? key,
     required this.initialValue,
     required this.onChanged,
   }) : super(key: key);
 
-  static const Map<String, String> logTypeOptions = {
-    'Meeting Minutes': 'Meeting Minutes',
-    'Summary': 'Summary',
-    'Class Notes': 'Class Notes',
+  static const Map<String, String> languageOptions = {
+    'auto': 'Auto Detect',
+    'urd': 'Urdu',
+    'eng': 'English',
+    'spa': 'Spanish',
+    'fra': 'French',
+    'deu': 'German',
+    'ita': 'Italian',
+    'por': 'Portuguese',
+    'pol': 'Polish',
+    'tur': 'Turkish',
+    'rus': 'Russian',
+    'nld': 'Dutch',
+    'ces': 'Czech',
+    'ara': 'Arabic',
+    'hin': 'Hindi',
+    'jpn': 'Japanese',
+    'kor': 'Korean',
+    'zho': 'Chinese (Mandarin)',
+    'vie': 'Vietnamese',
+    'ind': 'Indonesian',
+    'msa': 'Malay',
+    'tha': 'Thai',
+    'ben': 'Bengali',
+    'ukr': 'Ukrainian',
+    'heb': 'Hebrew',
+    'tam': 'Tamil',
+    'tel': 'Telugu',
+    'mar': 'Marathi',
+    'fil': 'Filipino',
+    'cat': 'Catalan',
+    'swe': 'Swedish',
+    'dan': 'Danish',
   };
 
   @override
@@ -22,7 +51,7 @@ class Logfordropdown extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Log Type',
+          'Language',
           style: TextStyle(
             color: Colors.grey.shade300,
             fontSize: 16,
@@ -36,14 +65,14 @@ class Logfordropdown extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
           child: DropdownButtonFormField<String>(
-            value: initialValue,
+            value: languageOptions.containsKey(initialValue) ? initialValue : 'auto',
             dropdownColor: const Color.fromARGB(255, 47, 47, 47),
             style: TextStyle(color: Colors.grey.shade300),
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 16),
               border: InputBorder.none,
             ),
-            items: logTypeOptions.entries.map((entry) {
+            items: languageOptions.entries.map((entry) {
               return DropdownMenuItem<String>(
                 value: entry.key,
                 child: Text(entry.value),
@@ -59,4 +88,4 @@ class Logfordropdown extends StatelessWidget {
       ],
     );
   }
-}
+} 

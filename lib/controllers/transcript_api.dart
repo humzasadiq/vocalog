@@ -7,7 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class TranscriptApi {
   static final String apiKey = dotenv.get('stt', fallback: '');
 
-  static Future<String?> getTranscript(String filePath, String fileName, String dirPath) async {
+  static Future<String?> getTranscript(String filePath, String fileName, String dirPath, String languageCode) async {
     try {
       if (filePath.isEmpty) {
         print("File path is empty");
@@ -19,7 +19,9 @@ class TranscriptApi {
       request.headers['xi-api-key'] = apiKey;
       request.fields['model_id'] = 'scribe_v1';
       request.fields['diarize'] = 'true';
-      // request.fields['language_code'] = 'eng';
+      if (languageCode != 'auto') {
+        request.fields['language_code'] = languageCode;
+      }
       request.files.add(await http.MultipartFile.fromPath('file', filePath));
       request.fields['file'] = fileName;
 

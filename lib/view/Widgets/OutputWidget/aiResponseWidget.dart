@@ -34,7 +34,7 @@ class _AIResponseWidgetState extends State<AIResponseWidget> {
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(50, 30),
-                  backgroundColor: Colors.black,
+                  backgroundColor: Colors.white,
                   side: BorderSide(color: widget.calar),
                 ),
                 onPressed: () async {
@@ -116,18 +116,60 @@ class _AIResponseWidgetState extends State<AIResponseWidget> {
                 ),
               ),
               Container(
-                decoration: const BoxDecoration(),
-                child: Markdown(
+                width: constraints.maxWidth * 0.9,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.black12,
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: MarkdownBody(
                   data: widget.output,
                   styleSheet: MarkdownStyleSheet(
-                    p: GoogleFonts.tinos(color: Colors.white),
-                    h1: GoogleFonts.tinos(color: Colors.white),
-                    h2: GoogleFonts.tinos(color: Colors.white),
-                    listBullet: GoogleFonts.tinos(color: Colors.white),
+                    p: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 16,
+                      height: 1.5,
+                    ),
+                    h1: TextStyle(
+                      color: widget.calar,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                    ),
+                    h2: TextStyle(
+                      color: widget.calar,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                    h3: TextStyle(
+                      color: widget.calar,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                    listBullet: const TextStyle(
+                      color: Colors.black87,
+                    ),
+                    blockquote: TextStyle(
+                      color: Colors.black54,
+                      fontStyle: FontStyle.italic,
+                      fontSize: 16,
+                    ),
+                    code: TextStyle(
+                      color: widget.calar,
+                      backgroundColor: Colors.black.withOpacity(0.05),
+                      
+                    ),
                   ),
-                  // Add these parameters to help with layout
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
                 ),
               ),
             ],
