@@ -1,5 +1,4 @@
 import 'package:http/http.dart' as http;
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -25,11 +24,9 @@ class TranscriptApi {
       request.files.add(await http.MultipartFile.fromPath('file', filePath));
       request.fields['file'] = fileName;
 
-      EasyLoading.show(status: 'Transcribing...');
       var response = await request.send();
       var responseBody = await response.stream.bytesToString();
 
-      EasyLoading.dismiss();
 
       if (response.statusCode == 200) {
         var jsonResponse = jsonDecode(responseBody);
@@ -47,7 +44,6 @@ class TranscriptApi {
         return "Error processing file";
       }
     } catch (e) {
-      EasyLoading.dismiss();
       print("Error processing file: $e");
       return "Error occurred";
     }

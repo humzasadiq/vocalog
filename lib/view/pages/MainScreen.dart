@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:vocalog/controllers/recorder.dart';
 import 'package:vocalog/view/Widgets/MainAppBar.dart';
 import '../../controllers/RecordingController.dart';
-import '../Widgets/MainScreenWidgets/micWidget.dart';
+import '../Widgets/MainScreenWidgets/MicWidget.dart';
 import '../Widgets/MainScreenWidgets/Waveform.dart';
 import '../Widgets/MainScreenWidgets/options/optionsButton.dart';
 
@@ -36,12 +36,15 @@ class _MainScreenState extends State<MainScreen> {
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    RecordingWidget(),
+                    MicWidget(
+                      controller: Get.find<RecorderController>(),
+                    ),
                     recorderController.isRecording.value
                         ? Text(
                             recorderController.recordingTime.value,
                             style: const TextStyle(
                               color: Colors.white,
+                              fontFamily: 'IBM',
                               fontSize: 30,
                               fontWeight: FontWeight.bold,
                             ),

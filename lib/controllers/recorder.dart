@@ -26,6 +26,12 @@ class RecorderController extends GetxController {
   // var soundType = true.obs;
   // String get soundTypeString => (soundType.value ? "1" : "2");
 
+  // Loading state
+  var isLoading = false.obs;
+  var loadingStatus = "".obs;
+  var isComplete = false.obs;
+  var isError = false.obs;
+
   // Sound paths
   late String startupSoundPath;
   late String stopSoundPath;
@@ -261,23 +267,53 @@ class RecorderController extends GetxController {
           String fileName = basename(filePath!);
           File recordingFile = File(filePath!);
           print("File name: $fileName");
+
+          // Step 1: Upload recording
+          _setLoading('Uploading');
           String? downloadUrl =
-              await recordingsController.uploadRecordingToFirebase(
+              await recordingsController.uploadRecordingToStorage(
                   recordingFile, userController.user.value!.id);
+          
+          if (downloadUrl == null) {
+            _setError('Upload failed');
+            return;
+          }
+
+          // Step 2: Transcribe recording
+          _setLoading('Transcribing');
           String? result =
               await TranscriptApi.getTranscript(filePath!, fileName, fileDir!, language.value);
-          if (result != null) {
-            transcript.value = result;
-            Map<String, String> aiResult = await AIApi.getAIMinutes(
-              result, 
-              fileDir!,
-              logType.value
-            );
-            aiResponse.value = aiResult['response'] ?? "";
-            String extractedTopic = aiResult['topic'] ?? "Unknown Topic";
-            recordingsController.createRecording(
-                extractedTopic, downloadUrl!, transcript.value, aiResponse.value);
+          
+          if (result == null) {
+            _setError('Transcription failed');
+            return;
           }
+          
+          transcript.value = result;
+
+          // Step 3: Generate AI response
+          _setLoading('Generating ${logType.value}');
+          Map<String, String> aiResult = await AIApi.getAIMinutes(
+            result, 
+            fileDir!,
+            logType.value
+          );
+          
+          if (aiResult.isEmpty) {
+            _setError('Generation failed');
+            return;
+          }
+          
+          aiResponse.value = aiResult['response'] ?? "";
+          String extractedTopic = aiResult['topic'] ?? "Unknown Topic";
+
+          // Step 4: Save to database
+          _setLoading('Saving');
+          await recordingsController.createRecording(
+              extractedTopic, downloadUrl, transcript.value, aiResponse.value);
+
+          // Show success
+          _setComplete();
         }
       } else {
         // Delete the recording if user cancels
@@ -293,14 +329,8 @@ class RecorderController extends GetxController {
         aiResponse.value = "";
       }
     } catch (e) {
+      _setError('Process failed');
       print("Error stopping recorder: $e");
-      Get.snackbar(
-        'Error',
-        'Failed to process recording',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
-      );
     }
   }
 
@@ -365,6 +395,34 @@ class RecorderController extends GetxController {
     topic.value = prefs.getString(TOPIC_KEY) ?? "";
     logType.value = prefs.getString(LOG_TYPE_KEY) ?? "Meeting Minutes";
     language.value = prefs.getString(LANGUAGE_KEY) ?? "auto";
+  }
+
+  void _setLoading(String status) {
+    isLoading.value = true;
+    loadingStatus.value = status;
+    isComplete.value = false;
+    isError.value = false;
+  }
+
+  void _setComplete() {
+    isLoading.value = false;
+    isComplete.value = true;
+    isError.value = false;
+    // Reset complete state after 2 seconds
+    Future.delayed(Duration(seconds: 2), () {
+      isComplete.value = false;
+    });
+  }
+
+  void _setError(String error) {
+    isLoading.value = false;
+    isError.value = true;
+    loadingStatus.value = error;
+    // Reset error state after 2 seconds
+    Future.delayed(Duration(seconds: 2), () {
+      isError.value = false;
+      loadingStatus.value = "";
+    });
   }
 
   @override

@@ -22,6 +22,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   final player = AudioPlayer();
   // Add this map to store colors
   final Map<String, Color> recordingColors = {};
+  // Add loading state
+  final RxBool isItemLoading = false.obs;
+  final RxString loadingItemId = ''.obs;
 
 static const List<Color> baseColors = [
   Colors.grey,
@@ -104,20 +107,33 @@ static final List<Color> mutedColors = baseColors.map((color) {
                           child: InkWell(
                             onTap: () async {
                               final filePath = recording.fileLink;
+                              loadingItemId.value = recording.id;
+                              isItemLoading.value = true;
 
-                              Get.to(Outputscreen(
-                                transcript: recording.transcript!,
-                                calar: calar,
-                                filePath: filePath,
-                                index: index,
-                                output: recording.output!,
-                                fileStat: recording.datetime?.toString() ?? "Unknown",
-                                fileDuration: (await player.setUrl(filePath))
-                                        ?.toString()
-                                        .split('.')
-                                        .first ??
-                                    'Unknown',
-                              ));
+                              try {
+                                final duration = await player.setUrl(filePath);
+                                Get.to(Outputscreen(
+                                  transcript: recording.transcript!,
+                                  calar: calar,
+                                  filePath: filePath,
+                                  index: index,
+                                  output: recording.output!,
+                                  fileStat: recording.datetime?.toString() ?? "Unknown",
+                                  fileDuration: duration?.toString().split('.').first ?? 'Unknown',
+                                ));
+                              } catch (e) {
+                                print("Error loading audio: $e");
+                                Get.snackbar(
+                                  "Error",
+                                  "Failed to load audio file",
+                                  backgroundColor: Colors.red.withOpacity(0.1),
+                                  colorText: Colors.red,
+                                  snackPosition: SnackPosition.TOP,
+                                );
+                              } finally {
+                                isItemLoading.value = false;
+                                loadingItemId.value = '';
+                              }
                             },
                             child: Container(
                               decoration: BoxDecoration(
@@ -128,8 +144,6 @@ static final List<Color> mutedColors = baseColors.map((color) {
                                     bottom: BorderSide(
                                         color: Colors.white.withOpacity(0.2),
                                         width: 1)),
-                                // color: calar,
-                                // borderRadius: BorderRadius.circular(10),
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
@@ -152,7 +166,16 @@ static final List<Color> mutedColors = baseColors.map((color) {
                                           color: Colors.white.withOpacity(0.6)),
                                     ),
                                   ),
-                                  leading: Icon(Icons.record_voice_over, color: calar),
+                                  leading: Obx(() => loadingItemId.value == recording.id && isItemLoading.value
+                                    ? SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(calar),
+                                        ),
+                                      )
+                                    : Icon(Icons.record_voice_over, color: calar)),
                                 ),
                               ),
                             ),

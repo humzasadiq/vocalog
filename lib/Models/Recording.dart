@@ -23,8 +23,11 @@ class Recording {
       userId: json['user_id'],
       topic: json['topic'],
       fileLink: json['file_link'],
-      datetime:
-          json['datetime'] != null ? DateTime.parse(json['datetime']) : null,
+      datetime: json['datetime'] != null 
+          ? DateTime.parse(json['datetime']) 
+          : json['created_at'] != null 
+              ? DateTime.parse(json['created_at'])
+              : null,
       transcript: json['transcript'],
       output: json['output'],
     );

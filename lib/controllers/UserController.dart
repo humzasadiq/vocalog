@@ -68,6 +68,7 @@ class UserController extends GetxController {
         'id': userCredential.user!.uid,
         'name': name,
         'email': email,
+        'country': 'Pakistan', // Default to Pakistan
         'createdAt': FieldValue.serverTimestamp()
       };
 
@@ -186,11 +187,12 @@ class UserController extends GetxController {
   }
 
   /// ✏️ Update User
-  Future<void> updateUser(String userId, {String? name, String? email}) async {
+  Future<void> updateUser(String userId, {String? name, String? email, String? country}) async {
     try {
       Map<String, dynamic> updateData = {};
       if (name != null) updateData['name'] = name;
       if (email != null) updateData['email'] = email;
+      if (country != null) updateData['country'] = country;
 
       await _firestore.collection('users').doc(userId).update(updateData);
 

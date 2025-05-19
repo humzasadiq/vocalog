@@ -10,6 +10,7 @@ import 'package:vocalog/view/pages/SettingsScreen.dart';
 import 'utils/Themes.dart';
 import 'controllers/recorder.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,13 @@ void main() async {
   } catch (e) {
     print("Failed to load .env file: $e");
   }
+  
+  // Initialize Supabase
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+  );
+  
   Get.lazyPut(() => RecorderController());
   Get.lazyPut(() => RecordingController());
   await Firebase.initializeApp();

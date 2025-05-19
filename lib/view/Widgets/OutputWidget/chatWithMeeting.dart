@@ -105,7 +105,7 @@ class _ChatWithMeetingState extends State<ChatWithMeeting> {
     );
 
     String systemPrompt =
-        "You are an assistant helping with questions about a meeting. Don't ever provide any information about the meeting that is not in the meeting transcript or meeting minutes. If the information isn't in the meeting content, please say so. Format your responses using Markdown for better readability.";
+        "You are an assistant helping with questions about a meeting. Don't ever provide any information about the meeting that is not in the meeting transcript or meeting minutes. Do not say that 'based on the given xyz' just give clear cut answers comprehensive or concise depending on the question and situation. If the information isn't in the meeting content, please say so. Format your responses using Markdown for better readability.";
 
     if (widget.transcript.isNotEmpty) {
       systemPrompt +=

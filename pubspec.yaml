@@ -61,6 +61,8 @@ dependencies:
   firebase_core: ^3.13.0
   flutter_swipe_action_cell: ^3.1.5
   get_storage: ^2.1.1
+  supabase_flutter: ^2.9.0
+  uuid: ^4.5.1
   
   
   
