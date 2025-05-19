@@ -25,6 +25,47 @@ class _HistoryScreenState extends State<HistoryScreen> {
   // Add loading state
   final RxBool isItemLoading = false.obs;
   final RxString loadingItemId = ''.obs;
+  // Add player state
+  final RxBool isPlayerInitialized = false.obs;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePlayer();
+  }
+
+  Future<void> _initializePlayer() async {
+    try {
+      await player.setAudioSource(
+        AudioSource.uri(Uri.parse('')),
+        preload: false,
+      );
+      isPlayerInitialized.value = true;
+    } catch (e) {
+      print('Error initializing player: $e');
+    }
+  }
+
+  Future<String?> _getAudioDuration(String fileUrl) async {
+    try {
+      if (!isPlayerInitialized.value) {
+        await _initializePlayer();
+      }
+
+      // Create a new AudioSource for the file
+      final audioSource = AudioSource.uri(Uri.parse(fileUrl));
+      
+      // Set the audio source
+      await player.setAudioSource(audioSource);
+      
+      // Get the duration
+      final duration = await player.duration;
+      return duration?.toString().split('.').first;
+    } catch (e) {
+      print('Error getting audio duration: $e');
+      return null;
+    }
+  }
 
 static const List<Color> baseColors = [
   Colors.grey,
@@ -111,7 +152,10 @@ static final List<Color> mutedColors = baseColors.map((color) {
                               isItemLoading.value = true;
 
                               try {
-                                final duration = await player.setUrl(filePath);
+                                // Get duration first
+                                final duration = await _getAudioDuration(filePath);
+                                
+                                // Navigate to output screen
                                 Get.to(Outputscreen(
                                   transcript: recording.transcript!,
                                   calar: calar,
@@ -119,20 +163,31 @@ static final List<Color> mutedColors = baseColors.map((color) {
                                   index: index,
                                   output: recording.output!,
                                   fileStat: recording.datetime?.toString() ?? "Unknown",
-                                  fileDuration: duration?.toString().split('.').first ?? 'Unknown',
+                                  fileDuration: duration ?? 'Unknown',
                                 ));
                               } catch (e) {
                                 print("Error loading audio: $e");
                                 Get.snackbar(
                                   "Error",
-                                  "Failed to load audio file",
+                                  "Failed to load audio file. Please try again.",
                                   backgroundColor: Colors.red.withOpacity(0.1),
                                   colorText: Colors.red,
                                   snackPosition: SnackPosition.TOP,
+                                  duration: Duration(seconds: 3),
                                 );
                               } finally {
                                 isItemLoading.value = false;
                                 loadingItemId.value = '';
+                                // Reset player
+                                try {
+                                  await player.stop();
+                                  await player.setAudioSource(
+                                    AudioSource.uri(Uri.parse('')),
+                                    preload: false,
+                                  );
+                                } catch (e) {
+                                  print('Error resetting player: $e');
+                                }
                               }
                             },
                             child: Container(
@@ -220,7 +275,12 @@ static final List<Color> mutedColors = baseColors.map((color) {
 
   @override
   void dispose() {
-    player.dispose();
+    try {
+      player.stop();
+      player.dispose();
+    } catch (e) {
+      print('Error disposing player: $e');
+    }
     recordingColors.clear();
     super.dispose();
   }

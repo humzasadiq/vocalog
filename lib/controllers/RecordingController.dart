@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:math';
 
 import '../Models/Recording.dart';
 
@@ -108,6 +110,8 @@ class RecordingController extends GetxController {
     try {
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.aac';
       String? fileUrl;
+      int retryCount = 0;
+      const maxRetries = 3;
 
       if (useSupabase) {
         try {
@@ -128,23 +132,48 @@ class RecordingController extends GetxController {
           throw Exception('Failed to upload to Supabase: $e');
         }
       } else {
-        // Upload to Firebase Storage
-        final bucket = 'e-commerece-f7d89.appspot.com';
-        final fileName = 'recordings/$userId/${DateTime.now().millisecondsSinceEpoch}.aac';
-        final url = 'https://firebasestorage.googleapis.com/v0/b/$bucket/o?uploadType=media&name=$fileName';
+        // Upload to Firebase Storage with retry logic
+        while (retryCount < maxRetries) {
+          try {
+            final bucket = 'e-commerece-f7d89.appspot.com';
+            final storagePath = 'recordings/$userId/$fileName';
+            final url = 'https://firebasestorage.googleapis.com/v0/b/$bucket/o?uploadType=media&name=$storagePath';
 
-        final bytes = await recordingFile.readAsBytes();
-        final response = await http.post(
-          Uri.parse(url),
-          headers: {
-            'Content-Type': 'audio/aac',
-          },
-          body: bytes,
-        );
+            final bytes = await recordingFile.readAsBytes();
+            final response = await http.post(
+              Uri.parse(url),
+              headers: {
+                'Content-Type': 'audio/aac',
+                'Authorization': 'Bearer ${await FirebaseAuth.instance.currentUser?.getIdToken()}',
+              },
+              body: bytes,
+            );
 
-        if (response.statusCode == 200) {
-          final encodedPath = Uri.encodeComponent(fileName);
-          fileUrl = 'https://firebasestorage.googleapis.com/v0/b/$bucket/o/$encodedPath?alt=media';
+            if (response.statusCode == 200) {
+              final encodedPath = Uri.encodeComponent(storagePath);
+              fileUrl = 'https://firebasestorage.googleapis.com/v0/b/$bucket/o/$encodedPath?alt=media';
+              break; // Success, exit retry loop
+            } else {
+              print('Firebase upload attempt $retryCount failed with status: ${response.statusCode}');
+              print('Response body: ${response.body}');
+              retryCount++;
+              if (retryCount < maxRetries) {
+                // Wait before retrying (exponential backoff)
+                await Future.delayed(Duration(seconds: pow(2, retryCount).toInt()));
+              }
+            }
+          } catch (e) {
+            print('Firebase upload attempt $retryCount failed with error: $e');
+            retryCount++;
+            if (retryCount < maxRetries) {
+              // Wait before retrying (exponential backoff)
+              await Future.delayed(Duration(seconds: pow(2, retryCount).toInt()));
+            }
+          }
+        }
+
+        if (fileUrl == null) {
+          throw Exception('Failed to upload to Firebase after $maxRetries attempts');
         }
       }
 

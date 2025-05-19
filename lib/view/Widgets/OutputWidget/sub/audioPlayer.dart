@@ -1,12 +1,9 @@
-import 'dart:io';
-
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_sound/flutter_sound.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:get/get.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:async';
 import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class Audioplayer extends StatefulWidget {
   const Audioplayer({super.key, required this.filePath, required this.calar});
@@ -18,13 +15,14 @@ class Audioplayer extends StatefulWidget {
 }
 
 class _AudioplayerState extends State<Audioplayer> {
-  final FlutterSoundPlayer _player = FlutterSoundPlayer();
+  final AudioPlayer _player = AudioPlayer();
   bool _isPlaying = false;
   Duration _currentPosition = Duration.zero;
   Duration _totalDuration = Duration.zero;
-  StreamSubscription? _playerSubscription;
-  String? _localFilePath;
   RxBool isLoading = false.obs;
+  String? _localFilePath;
+  bool _isDisposed = false;
+
   @override
   void initState() {
     super.initState();
@@ -32,72 +30,97 @@ class _AudioplayerState extends State<Audioplayer> {
   }
 
   Future<void> _initPlayer() async {
+    if (_isDisposed) return;
     isLoading.value = true;
-    await _player.openPlayer();
-    _player.setSubscriptionDuration(const Duration(milliseconds: 100));
-
     try {
-      final url = widget.filePath;
-      final response = await HttpClient().getUrl(Uri.parse(url));
-      final fileStream = await response.close();
-
-      final dir = await getTemporaryDirectory();
-      final localFile = File("${dir.path}/downloaded_audio.aac");
-
-      // ✅ Fix: Use openWrite() to get a StreamConsumer
-      await fileStream.pipe(localFile.openWrite());
-
-      setState(() {
-        _localFilePath = localFile.path;
+      // Set up position stream
+      _player.positionStream.listen((position) {
+        if (!_isDisposed) {
+          setState(() {
+            _currentPosition = position;
+          });
+        }
       });
 
-      _playerSubscription = _player.onProgress?.listen((event) {
-        setState(() {
-          _currentPosition = event.position;
-          _totalDuration = event.duration;
-        });
+      // Set up duration stream
+      _player.durationStream.listen((duration) {
+        if (!_isDisposed && duration != null) {
+          setState(() {
+            _totalDuration = duration;
+          });
+        }
       });
-      isLoading.value = false;
-    } catch (e) {
-      debugPrint("Error downloading audio: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Colors.red,
-          content: Text("Failed to load audio."),
-        ),
-      );
-      isLoading.value = false;
-    }
-  }
 
-  @override
-  void dispose() {
-    _playerSubscription?.cancel();
-    _player.closePlayer();
-    super.dispose();
-  }
-
-  Future<void> _togglePlayback() async {
-    if (_localFilePath == null) return;
-
-    if (_isPlaying) {
-      await _player.stopPlayer();
-    } else {
-      await _player.startPlayer(
-        fromURI: _localFilePath,
-        codec: Codec.aacADTS,
-        whenFinished: () {
+      // Set up player completion
+      _player.playerStateStream.listen((state) {
+        if (!_isDisposed && state.processingState == ProcessingState.completed) {
           setState(() {
             _isPlaying = false;
             _currentPosition = Duration.zero;
           });
-        },
-      );
-    }
+        }
+      });
 
-    setState(() {
-      _isPlaying = !_isPlaying;
-    });
+      // Download and cache the audio file
+      final url = widget.filePath;
+      final response = await HttpClient().getUrl(Uri.parse(url));
+      final fileStream = await response.close();
+      final dir = await getTemporaryDirectory();
+      final localFile = File("${dir.path}/downloaded_audio.aac");
+      await fileStream.pipe(localFile.openWrite());
+      _localFilePath = localFile.path;
+
+      // Set the audio source
+      await _player.setAudioSource(
+        AudioSource.uri(Uri.file(_localFilePath!)),
+        preload: true,
+      );
+
+      if (!_isDisposed) {
+        isLoading.value = false;
+      }
+    } catch (e) {
+      debugPrint("Error initializing audio player: $e");
+      if (!_isDisposed) {
+        Get.snackbar(
+          "Error",
+          "Failed to load audio file. Please try again.",
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+          snackPosition: SnackPosition.TOP,
+          duration: Duration(seconds: 3),
+        );
+        isLoading.value = false;
+      }
+    }
+  }
+
+  Future<void> _togglePlayback() async {
+    if (_isDisposed) return;
+    try {
+      if (_isPlaying) {
+        await _player.pause();
+      } else {
+        await _player.play();
+      }
+      if (!_isDisposed) {
+        setState(() {
+          _isPlaying = !_isPlaying;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error toggling playback: $e");
+      if (!_isDisposed) {
+        Get.snackbar(
+          "Error",
+          "Failed to play audio. Please try again.",
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+          snackPosition: SnackPosition.TOP,
+          duration: Duration(seconds: 3),
+        );
+      }
+    }
   }
 
   String _formatDuration(Duration duration) {
@@ -106,6 +129,18 @@ class _AudioplayerState extends State<Audioplayer> {
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return hours != "00" ? "$hours:$minutes:$seconds" : "$minutes:$seconds";
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    try {
+      _player.pause();
+      _player.dispose();
+    } catch (e) {
+      debugPrint("Error disposing player: $e");
+    }
+    super.dispose();
   }
 
   @override
@@ -162,13 +197,11 @@ class _AudioplayerState extends State<Audioplayer> {
                     children: [
                       Text(
                         _formatDuration(_currentPosition),
-                        style:
-                            const TextStyle(color: Colors.grey, fontSize: 12),
+                        style: const TextStyle(color: Colors.grey, fontSize: 12),
                       ),
                       Text(
                         _formatDuration(_totalDuration),
-                        style:
-                            const TextStyle(color: Colors.grey, fontSize: 12),
+                        style: const TextStyle(color: Colors.grey, fontSize: 12),
                       ),
                     ],
                   ),
@@ -179,27 +212,31 @@ class _AudioplayerState extends State<Audioplayer> {
             IconButton(
               onPressed: () async {
                 if (_localFilePath == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      backgroundColor: Colors.red,
-                      content: Text('Audio is still loading, please wait'),
-                    ),
+                  Get.snackbar(
+                    "Error",
+                    "Audio is still loading, please wait",
+                    backgroundColor: Colors.red.withOpacity(0.1),
+                    colorText: Colors.red,
+                    snackPosition: SnackPosition.TOP,
+                    duration: Duration(seconds: 3),
                   );
                   return;
                 }
                 
                 try {
                   await Share.shareXFiles(
-                    [XFile(_localFilePath!)], // Use local file path instead of remote URL
+                    [XFile(_localFilePath!)],
                     subject: 'Audio Recording',
                   );
                 } catch (e) {
                   debugPrint('Error sharing file: $e');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: Colors.red,
-                      content: Text('Failed to share file: ${e.toString()}'),
-                    ),
+                  Get.snackbar(
+                    "Error",
+                    "Failed to share file: ${e.toString()}",
+                    backgroundColor: Colors.red.withOpacity(0.1),
+                    colorText: Colors.red,
+                    snackPosition: SnackPosition.TOP,
+                    duration: Duration(seconds: 3),
                   );
                 }
               },
